@@ -39,7 +39,7 @@ const Login = () => {
 
   return (
     <Container
-      style={{ minHeight: '100vh' }}
+      style={{ minHeight: '80vh' }}
       className="d-flex align-items-center justify-content-center"
     >
       <Row className="w-100 justify-content-center">
