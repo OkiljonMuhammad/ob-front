@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Form, Button, Container, Row, Col, Alert } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const Register = () => {
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [formData, setFormData] = useState({
-    name: '',
+    username: '',
     email: '',
     password: '',
     confirmPassword: '',
@@ -30,7 +32,10 @@ const Register = () => {
 
     try {
       setLoading(true);
-      const response = await axios.post('/api/auth/register', formData);
+      const response = await axios.post(
+        `${BASE_URL}/api/auth/register`,
+        formData
+      );
       console.log(response.data);
 
       navigate('/login');
@@ -54,10 +59,10 @@ const Register = () => {
 
             <Form onSubmit={handleSubmit}>
               <Form.Group className="mb-3">
-                <Form.Label>Full Name</Form.Label>
+                <Form.Label>Username</Form.Label>
                 <Form.Control
                   type="text"
-                  name="name"
+                  name="username"
                   required
                   onChange={handleChange}
                 />

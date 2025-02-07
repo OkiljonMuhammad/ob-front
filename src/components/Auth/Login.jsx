@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { Form, Button, Container, Row, Col, Alert } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
+import axios from 'axios';
 
 const Login = () => {
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [formData, setFormData] = useState({
     email: '',
     password: '',
@@ -24,7 +26,7 @@ const Login = () => {
 
     try {
       setLoading(true);
-      const response = await axios.post('/api/auth/login', formData);
+      const response = await axios.post(`${BASE_URL}/api/auth/login`, formData);
       localStorage.setItem('token', response.data.token);
 
       navigate('/dashboard');
