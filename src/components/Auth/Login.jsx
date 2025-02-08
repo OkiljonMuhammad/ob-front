@@ -1,23 +1,19 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Form, Button, Container, Row, Col, Alert } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import ThemeContext from '../../context/ThemeContext';
 
 const Login = () => {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
-  const [formData, setFormData] = useState({
-    email: '',
-    password: '',
-  });
+  const { theme } = useContext(ThemeContext); // Get theme from context
+  const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
 
   const handleChange = (e) => {
-    setFormData({
-      ...formData,
-      [e.target.name]: e.target.value,
-    });
+    setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
   const handleSubmit = async (e) => {
@@ -27,11 +23,17 @@ const Login = () => {
     try {
       setLoading(true);
       const response = await axios.post(`${BASE_URL}/api/auth/login`, formData);
+
+      // Store token securely
       localStorage.setItem('token', response.data.token);
+      axios.defaults.headers.common['Authorization'] =
+        `Bearer ${response.data.token}`;
 
       navigate('/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Login failed');
+      setError(
+        err.response?.data?.message || 'Login failed. Please try again.'
+      );
     } finally {
       setLoading(false);
     }
@@ -40,11 +42,13 @@ const Login = () => {
   return (
     <Container
       style={{ minHeight: '80vh' }}
-      className="d-flex align-items-center justify-content-center"
+      className={`d-flex align-items-center justify-content-center bg-${theme} text-${theme === 'light' ? 'dark' : 'light'}`}
     >
       <Row className="w-100 justify-content-center">
         <Col md={6} lg={4}>
-          <div className="p-4 shadow rounded bg-white">
+          <div
+            className={`p-4 shadow rounded bg-${theme === 'light' ? 'white' : 'dark'}`}
+          >
             <h2 className="text-center mb-4">Login</h2>
             {error && <Alert variant="danger">{error}</Alert>}
 
