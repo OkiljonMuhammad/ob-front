@@ -3,10 +3,12 @@ import { Form, Button, Container, Row, Col, Alert } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import ThemeContext from '../../context/ThemeContext';
+import AuthContext from '../../context/AuthContext';
 
 const Login = () => {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const { theme } = useContext(ThemeContext);
+  const { login } = useContext(AuthContext);
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -23,11 +25,9 @@ const Login = () => {
     try {
       setLoading(true);
       const response = await axios.post(`${BASE_URL}/api/auth/login`, formData);
-
-      localStorage.setItem('token', response.data.token);
+      login(response.data.token);
       axios.defaults.headers.common['Authorization'] =
         `Bearer ${response.data.token}`;
-
       navigate('/dashboard');
     } catch (err) {
       setError(

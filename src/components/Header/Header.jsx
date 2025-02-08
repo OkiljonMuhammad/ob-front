@@ -1,24 +1,30 @@
+import { useContext } from 'react';
 import { Container, Navbar, Nav } from 'react-bootstrap';
 import LanguageSwitcher from './LanguageSwitcher';
 import ThemeSwitcher from './ThemeSwitcher';
 import PropTypes from 'prop-types';
+import { useTranslation } from 'react-i18next';
+import AuthContext from '../../context/AuthContext';
 
 const Header = ({ theme }) => {
-  const user = localStorage.getItem('user');
+  const { t } = useTranslation();
+  const { isAuthenticated } = useContext(AuthContext);
 
   return (
-    <Navbar bg={theme} variant={theme} expand="lg">
-      <Container>
-        <Navbar.Brand href="/">Oltinbosh</Navbar.Brand>
+    <Navbar bg={theme} variant={theme} expand="sm" sticky="top">
+      <Container fluid className="px-4">
+        <Navbar.Brand href="/" className="me-5">
+          Oltinbosh
+        </Navbar.Brand>
         <Navbar.Toggle aria-controls="basic-navbar-nav" />
         <Navbar.Collapse id="basic-navbar-nav">
-          <Nav className="ms-auto d-flex align-items-center">
+          <Nav className="ms-auto d-flex align-items-center gap-3">
             <LanguageSwitcher />
             <ThemeSwitcher />
-            {!user ? (
+            {!isAuthenticated ? (
               <>
-                <Nav.Link href="/login">Login</Nav.Link>
-                <Nav.Link href="/register">Register</Nav.Link>
+                <Nav.Link href="/login">{t('login')}</Nav.Link>
+                <Nav.Link href="/register">{t('register')}</Nav.Link>
               </>
             ) : (
               <Nav.Link href="/dashboard">Dashboard</Nav.Link>

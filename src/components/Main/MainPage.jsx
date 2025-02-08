@@ -3,9 +3,9 @@ import TemplateGallery from './TemplateGallery';
 import PopularTemplatesTable from './PopularTemplatesTable';
 import TagCloud from './TagCloud';
 
-export default function TemplateDashboard() {
+export default function MainPage() {
   return (
-    <Container className="py-4">
+    <Container fluid className="py-4">
       {/* Page Header */}
       <h1 className="mb-4">Template Dashboard</h1>
 

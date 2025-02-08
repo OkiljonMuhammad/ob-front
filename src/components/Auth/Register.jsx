@@ -3,10 +3,12 @@ import { Form, Button, Container, Row, Col, Alert } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import ThemeContext from '../../context/ThemeContext';
+import AuthContext from '../../context/AuthContext';
 
 const Register = () => {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const { theme } = useContext(ThemeContext);
+  const { login } = useContext(AuthContext);
   const [formData, setFormData] = useState({
     username: '',
     email: '',
@@ -44,9 +46,10 @@ const Register = () => {
         `${BASE_URL}/api/auth/register`,
         formData
       );
-      console.log(response.data);
-
-      navigate('/login');
+      login(response.data.token);
+      axios.defaults.headers.common['Authorization'] =
+        `Bearer ${response.data.token}`;
+      navigate('/dashboard');
     } catch (err) {
       setError(
         err.response?.data?.message || 'Registration failed. Please try again.'

@@ -18,7 +18,11 @@ const ThemeSwitcher = () => {
       variant={theme === 'light' ? 'dark' : 'light'}
       onClick={toggleTheme}
     >
-      {theme === 'light' ? t('darkMode') : t('lightMode')}
+      {theme === 'light' ? (
+        <i className="bi bi-brightness-high"></i>
+      ) : (
+        <i className="bi bi-moon-stars-fill"></i>
+      )}
     </Button>
   );
 };

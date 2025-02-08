@@ -1,9 +1,9 @@
 export default {
   translation: {
-    language: 'Til',
+    language: 'UZ',
     english: 'Ingliz',
     uzbek: "O'zbek",
-    darkMode: 'Tun',
-    lightMode: 'Kun',
+    login: 'Kirish',
+    register: 'Registratsiya',
   },
 };
