@@ -1,31 +1,16 @@
 import i18n from 'i18next';
 import { initReactI18next } from 'react-i18next';
+import en from './locales/en.js';
+import uz from './locales/uz.js';
 
-const resources = {
-  en: {
-    translation: {
-      welcome: 'Welcome',
-      description:
-        'This is a simple app with internationalization and theming.',
-      changeLanguage: 'Change Language',
-    },
-  },
-  uz: {
-    translation: {
-      welcome: 'Xush kelibsiz',
-      description: 'Bu oddiy ilova, xalqaro va mavzu imkoniyatlari bilan.',
-      changeLanguage: "Tilni o'zgartirish",
-    },
-  },
-};
+const resources = { en, uz };
+const savedLanguage = localStorage.getItem('language') || 'en';
 
 i18n.use(initReactI18next).init({
   resources,
-  lng: 'en',
+  lng: savedLanguage,
   fallbackLng: 'en',
-  interpolation: {
-    escapeValue: false,
-  },
+  interpolation: { escapeValue: false },
 });
 
 export default i18n;

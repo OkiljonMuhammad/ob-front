@@ -1,14 +1,16 @@
-import React, { useContext } from 'react';
+import { useContext } from 'react';
 import { Button } from 'react-bootstrap';
 import ThemeContext from '../../context/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 const ThemeSwitcher = () => {
   const { theme, setTheme } = useContext(ThemeContext);
+  const { t } = useTranslation();
 
   const toggleTheme = () => {
     const newTheme = theme === 'light' ? 'dark' : 'light';
     setTheme(newTheme);
-    localStorage.setItem('theme', newTheme); 
+    localStorage.setItem('theme', newTheme);
   };
 
   return (
@@ -16,7 +18,7 @@ const ThemeSwitcher = () => {
       variant={theme === 'light' ? 'dark' : 'light'}
       onClick={toggleTheme}
     >
-      {theme === 'light' ? 'Dark Mode' : 'Light Mode'}
+      {theme === 'light' ? t('darkMode') : t('lightMode')}
     </Button>
   );
 };

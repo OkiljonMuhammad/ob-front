@@ -1,4 +1,4 @@
-import React, { useState, useContext } from 'react';
+import { useState, useContext } from 'react';
 import { Form, Button, Container, Row, Col, Alert } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
@@ -6,7 +6,7 @@ import ThemeContext from '../../context/ThemeContext';
 
 const Login = () => {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
-  const { theme } = useContext(ThemeContext); // Get theme from context
+  const { theme } = useContext(ThemeContext);
   const [formData, setFormData] = useState({ email: '', password: '' });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -24,7 +24,6 @@ const Login = () => {
       setLoading(true);
       const response = await axios.post(`${BASE_URL}/api/auth/login`, formData);
 
-      // Store token securely
       localStorage.setItem('token', response.data.token);
       axios.defaults.headers.common['Authorization'] =
         `Bearer ${response.data.token}`;
@@ -84,7 +83,7 @@ const Login = () => {
             </Form>
 
             <div className="mt-3 text-center">
-              Don't have an account? <Link to="/register">Register here</Link>
+              Do not have an account? <Link to="/register">Register here</Link>
             </div>
           </div>
         </Col>

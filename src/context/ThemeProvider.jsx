@@ -1,8 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import ThemeContext from './ThemeContext';
+import PropTypes from 'prop-types';
 
 const ThemeProvider = ({ children }) => {
-  const [theme, setTheme] = useState(localStorage.getItem('theme') || 'light');
+  const storedTheme = localStorage.getItem('theme');
+  const [theme, setTheme] = useState(storedTheme ? storedTheme : 'light');
 
   useEffect(() => {
     localStorage.setItem('theme', theme);
@@ -18,6 +20,10 @@ const ThemeProvider = ({ children }) => {
       </div>
     </ThemeContext.Provider>
   );
+};
+
+ThemeProvider.propTypes = {
+  children: PropTypes.node.isRequired,
 };
 
 export default ThemeProvider;
