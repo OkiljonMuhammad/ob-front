@@ -10,6 +10,8 @@ import Login from './components/Auth/Login';
 import Register from './components/Auth/Register';
 import Dashboard from './components/Dashboard/Dashboard';
 import Layout from './components/Layout/Layout';
+import Templates from './components/Dashboard/Template/Templates';
+import CreateTemplate from './components/Dashboard/Template/CreateTemplate';
 
 function App() {
   return (
@@ -51,6 +53,8 @@ function App() {
                   </Layout>
                 }
               />
+              <Route path="/templates" element={<Templates />} />
+              <Route path="/templates/create" element={<Layout><CreateTemplate /></Layout>} />
             </Routes>
           </Router>
         </AuthProvider>
