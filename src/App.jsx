@@ -1,5 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
+import 'react-toastify/dist/ReactToastify.css'; 
 import { I18nextProvider } from 'react-i18next';
 import i18n from './i18n/i18n';
 import 'bootstrap-icons/font/bootstrap-icons.css';
@@ -10,8 +11,8 @@ import Login from './components/Auth/Login';
 import Register from './components/Auth/Register';
 import Dashboard from './components/Dashboard/Dashboard';
 import Layout from './components/Layout/Layout';
-import Templates from './components/Dashboard/Template/Templates';
-import CreateTemplate from './components/Dashboard/Template/CreateTemplate';
+import Templates from './components/Template/Templates';
+import CreateTemplate from './components/Template/CreateTemplate';
 
 function App() {
   return (
@@ -54,7 +55,14 @@ function App() {
                 }
               />
               <Route path="/templates" element={<Templates />} />
-              <Route path="/templates/create" element={<Layout><CreateTemplate /></Layout>} />
+              <Route
+                path="/templates/create"
+                element={
+                  <Layout>
+                    <CreateTemplate />
+                  </Layout>
+                }
+              />
             </Routes>
           </Router>
         </AuthProvider>

@@ -33,7 +33,11 @@ export default function Forms() {
             <td>{form.formName}</td>
             <td>{form.submittedAt}</td>
             <td>
-              <Button variant="info" size="sm" onClick={() => handleViewForm(form.id)}>
+              <Button
+                variant="info"
+                size="sm"
+                onClick={() => handleViewForm(form.id)}
+              >
                 View Form
               </Button>
             </td>

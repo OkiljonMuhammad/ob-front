@@ -1,7 +1,7 @@
 import React from 'react';
 import { Container, Tabs, Tab } from 'react-bootstrap';
-import Templates from './Template/Templates';
-import Forms from './Forms';
+import Templates from '../Template/Templates';
+import Forms from '../Form/Forms';
 
 export default function Dashboard() {
   return (
@@ -9,7 +9,11 @@ export default function Dashboard() {
       <h1 className="mb-4">Dashboard</h1>
 
       {/* Tabs for Templates and Filled Forms */}
-      <Tabs defaultActiveKey="templates" id="personal-pages-tabs" className="mb-3">
+      <Tabs
+        defaultActiveKey="templates"
+        id="personal-pages-tabs"
+        className="mb-3"
+      >
         {/* Templates Tab */}
         <Tab eventKey="templates" title="Templates">
           <Templates />

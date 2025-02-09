@@ -14,7 +14,7 @@ export default function Templates() {
 
   // Handler for deleting a template
   const handleDeleteTemplate = (id) => {
-    setTemplates(templates.filter(template => template.id !== id));
+    setTemplates(templates.filter((template) => template.id !== id));
   };
 
   return (
@@ -22,7 +22,10 @@ export default function Templates() {
       <Row className="mb-3">
         <Col>
           {/* Button to navigate to CreateTemplate */}
-          <Button variant="primary" onClick={() => navigate('/templates/create')}>
+          <Button
+            variant="primary"
+            onClick={() => navigate('/templates/create')}
+          >
             Create Template
           </Button>
         </Col>
@@ -46,7 +49,11 @@ export default function Templates() {
                 <Button variant="warning" size="sm" className="me-2">
                   Edit
                 </Button>
-                <Button variant="danger" size="sm" onClick={() => handleDeleteTemplate(template.id)}>
+                <Button
+                  variant="danger"
+                  size="sm"
+                  onClick={() => handleDeleteTemplate(template.id)}
+                >
                   Delete
                 </Button>
               </td>
