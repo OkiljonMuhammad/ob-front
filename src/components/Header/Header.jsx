@@ -8,7 +8,7 @@ import AuthContext from '../../context/AuthContext';
 
 const Header = ({ theme }) => {
   const { t } = useTranslation();
-  const { isAuthenticated } = useContext(AuthContext);
+  const { isAuthenticated, logout } = useContext(AuthContext);
 
   return (
     <Navbar bg={theme} variant={theme} expand="sm" sticky="top">
@@ -27,7 +27,10 @@ const Header = ({ theme }) => {
                 <Nav.Link href="/register">{t('register')}</Nav.Link>
               </>
             ) : (
+              <>
               <Nav.Link href="/dashboard">Dashboard</Nav.Link>
+              <Nav.Link onClick={logout} href="/">Logout</Nav.Link>
+              </>
             )}
           </Nav>
         </Navbar.Collapse>

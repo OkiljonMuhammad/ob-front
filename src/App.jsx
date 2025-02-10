@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'react-toastify/dist/ReactToastify.css'; 
+import { ToastContainer } from 'react-toastify';
 import { I18nextProvider } from 'react-i18next';
 import i18n from './i18n/i18n';
 import 'bootstrap-icons/font/bootstrap-icons.css';
@@ -13,7 +14,7 @@ import Dashboard from './components/Dashboard/Dashboard';
 import Layout from './components/Layout/Layout';
 import Templates from './components/Template/Templates';
 import CreateTemplate from './components/Template/CreateTemplate';
-
+import ProtectedRoute from './components/Auth/ProtectedRoute';
 function App() {
   return (
     <I18nextProvider i18n={i18n}>
@@ -50,20 +51,41 @@ function App() {
                 path="/dashboard"
                 element={
                   <Layout>
+                    <ProtectedRoute>
                     <Dashboard />
+                  </ProtectedRoute>
                   </Layout>
                 }
               />
-              <Route path="/templates" element={<Templates />} />
+              <Route path="/templates" 
+              element={
+                <Layout>
+                <ProtectedRoute>
+                <Templates />
+                </ProtectedRoute>
+                </Layout>
+              } />
               <Route
                 path="/templates/create"
                 element={
                   <Layout>
+                    <ProtectedRoute>
                     <CreateTemplate />
+                  </ProtectedRoute>
                   </Layout>
                 }
               />
             </Routes>
+            <ToastContainer
+            position="top-right" 
+            autoClose={3000}     
+            hideProgressBar={false} 
+            newestOnTop={false}  
+            closeOnClick        
+            rtl={false}         
+            pauseOnFocusLoss     
+            draggable          
+            pauseOnHover />
           </Router>
         </AuthProvider>
       </ThemeProvider>

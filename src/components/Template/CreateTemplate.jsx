@@ -3,8 +3,9 @@ import { Form, Button, Row, Col, Container } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import TagAutoComplete from '../Tag/TagAutoComplete';
 import axios from 'axios';
-import { ToastContainer, toast } from 'react-toastify';
+import { toast } from 'react-toastify';
 import ReactMarkdown from 'react-markdown';
+import TopicSuggest from '../Topic/TopicSuggest'; // Import the AddTopic component
 
 export default function CreateTemplate() {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -13,7 +14,7 @@ export default function CreateTemplate() {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    topicId: '',
+    topicId: '', // Default topicId is empty
     image: '',
     isPublic: true,
     tags: [],
@@ -40,7 +41,6 @@ export default function CreateTemplate() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
     try {
       const response = await axios.post(
         `${BASE_URL}/api/template/create`,
@@ -51,33 +51,16 @@ export default function CreateTemplate() {
           },
         }
       );
-      toast.success('Template created successfully!', {
-        position: 'top-right',
-        autoClose: 2000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
-      setTimeout(() => {
-        navigate('/dashboard');
-      }, 3000);
+      toast.success('Template created successfully!');
+      navigate('/dashboard');
     } catch (error) {
       console.error('Error creating template:', error);
-      toast.error('Failed to create template. Please try again.', {
-        position: 'top-right',
-        autoClose: 2000,
-        hideProgressBar: false,
-        closeOnClick: true,
-        pauseOnHover: true,
-        draggable: true,
-      });
+      toast.error('Failed to create template. Please try again.');
     }
   };
 
   return (
     <Container fluid className="py-4">
-      <ToastContainer />
       <Form onSubmit={handleSubmit}>
         <h2>Create New Template</h2>
         <Row className="mb-3">
@@ -94,7 +77,6 @@ export default function CreateTemplate() {
             </Form.Group>
           </Col>
         </Row>
-
         <Row className="mb-3">
           <Col>
             <Form.Group controlId="description">
@@ -119,7 +101,6 @@ export default function CreateTemplate() {
             >
               {showPreview ? 'Close Preview' : 'Show Preview'}
             </Button>
-
             {showPreview && (
               <div>
                 <h5>Preview</h5>
@@ -133,18 +114,19 @@ export default function CreateTemplate() {
         <Row className="mb-3">
           <Col>
             <Form.Group controlId="topicId">
-              <Form.Label>Topic ID</Form.Label>
-              <Form.Control
-                type="number"
-                name="topicId"
-                value={formData.topicId}
-                onChange={handleChange}
-                required
+              <Form.Label>Topic</Form.Label>
+              {/* Use the AddTopic component */}
+              <TopicSuggest
+                onTopicSelect={(topicId) =>
+                  setFormData((prevData) => ({
+                    ...prevData,
+                    topicId,
+                  }))
+                }
               />
             </Form.Group>
           </Col>
         </Row>
-
         <Row className="mb-3">
           <Col>
             <Form.Group controlId="image">
@@ -158,7 +140,6 @@ export default function CreateTemplate() {
             </Form.Group>
           </Col>
         </Row>
-
         <Row className="mb-3">
           <Col>
             <Form.Group controlId="isPublic">
@@ -172,7 +153,6 @@ export default function CreateTemplate() {
             </Form.Group>
           </Col>
         </Row>
-
         <Row className="mb-3">
           <Col>
             <Form.Group controlId="tags">
