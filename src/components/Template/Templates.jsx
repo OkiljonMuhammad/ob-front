@@ -1,20 +1,50 @@
-import React, { useState } from 'react';
-import { Table, Button, Row, Col } from 'react-bootstrap';
+import React, { useState, useEffect } from 'react';
+import { Table, Button, Row, Col, Pagination } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
-
-// Sample data for templates
-const initialTemplates = [
-  { id: 1, title: 'Template 1', createdAt: '2023-10-01' },
-  { id: 2, title: 'Template 2', createdAt: '2023-10-02' },
-];
+import axios from 'axios';
 
 export default function Templates() {
-  const [templates, setTemplates] = useState(initialTemplates);
+  const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  const [templates, setTemplates] = useState([]);
+  const [pagination, setPagination] = useState({
+    total: 0,
+    page: 1,
+    totalPages: 1,
+    prevPage: null,
+    nextPage: null,
+  });
+  const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
 
-  // Handler for deleting a template
-  const handleDeleteTemplate = (id) => {
-    setTemplates(templates.filter((template) => template.id !== id));
+  // Fetch templates from the API
+  const fetchTemplates = async (page = 1, limit = 10) => {
+    try {
+      setLoading(true);
+      const response = await axios.get(`${BASE_URL}/api/template/templates`, {
+        params: { page, limit },
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}`,
+        },
+      });
+      const { templates: fetchedTemplates, pagination: fetchedPagination } =
+        response.data;
+      setTemplates(fetchedTemplates);
+      setPagination(fetchedPagination);
+    } catch (error) {
+      console.error('Error fetching templates:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Initial fetch when the component mounts
+  useEffect(() => {
+    fetchTemplates(pagination.page);
+  }, []);
+
+  // Handle page change
+  const handlePageChange = (newPage) => {
+    fetchTemplates(newPage);
   };
 
   return (
@@ -30,37 +60,72 @@ export default function Templates() {
           </Button>
         </Col>
       </Row>
-      <Table striped bordered hover responsive>
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Title</th>
-            <th>Created At</th>
-            <th>Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          {templates.map((template) => (
-            <tr key={template.id}>
-              <td>{template.id}</td>
-              <td>{template.title}</td>
-              <td>{template.createdAt}</td>
-              <td>
-                <Button variant="warning" size="sm" className="me-2">
-                  Edit
-                </Button>
-                <Button
-                  variant="danger"
-                  size="sm"
-                  onClick={() => handleDeleteTemplate(template.id)}
-                >
-                  Delete
-                </Button>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </Table>
+
+      {/* Loading State */}
+      {loading ? (
+        <p>Loading templates...</p>
+      ) : (
+        <>
+          {/* Table to display templates */}
+          <Table striped bordered hover responsive>
+            <thead>
+              <tr>
+                <th>Title</th>
+                <th>Date</th>
+                <th>Topic</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {templates.map((template) => (
+                <tr key={template.id}>
+                  <td>{template.title}</td>
+                  <td>{new Date(template.createdAt).toLocaleDateString()}</td>
+                  <td>{template.Topic?.topicName || 'No Topic'}</td>
+                  <td>
+                    <Button
+                      variant="warning"
+                      size="sm"
+                      className="me-2"
+                      onClick={() =>
+                        navigate(`/templates/edit/${template.id}`)
+                      }
+                    >
+                      Edit
+                    </Button>
+                    <Button
+                      variant="danger"
+                      size="sm"
+                      onClick={() => console.log('Delete template:', template.id)}
+                    >
+                      Delete
+                    </Button>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+
+          {/* Pagination Controls */}
+          <Pagination>
+            {pagination.prevPage && (
+              <Pagination.Prev onClick={() => handlePageChange(pagination.page - 1)} />
+            )}
+            {[...Array(pagination.totalPages)].map((_, index) => (
+              <Pagination.Item
+                key={index + 1}
+                active={index + 1 === pagination.page}
+                onClick={() => handlePageChange(index + 1)}
+              >
+                {index + 1}
+              </Pagination.Item>
+            ))}
+            {pagination.nextPage && (
+              <Pagination.Next onClick={() => handlePageChange(pagination.page + 1)} />
+            )}
+          </Pagination>
+        </>
+      )}
     </>
   );
 }

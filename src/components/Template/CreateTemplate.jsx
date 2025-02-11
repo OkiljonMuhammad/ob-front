@@ -51,8 +51,6 @@ export default function CreateTemplate() {
       setError('Template ID is missing. Please create a template first.');
       return;
     }
-    console.log(questions);
-    console.log(templateId);
     try {
       await axios.post(
         `${BASE_URL}/api/question/${templateId}`,
@@ -65,6 +63,7 @@ export default function CreateTemplate() {
         }
       );
       toast.success('Questions saved successfully!');
+      navigate('/dashboard');
       setError(null); // Clear any previous errors
     } catch (error) {
       console.error('Error saving questions:', error);
