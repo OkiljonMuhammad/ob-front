@@ -46,7 +46,7 @@ export default function CreateTemplate() {
   };
 
   // Handle saving questions
-  const handleSaveQuestions = async (questions) => {
+  const handleSaveQuestions = async (templateId, questions) => {
     if (!templateId) {
       setError('Template ID is missing. Please create a template first.');
       return;
@@ -59,6 +59,7 @@ export default function CreateTemplate() {
         { questions },
         {
           headers: {
+            'Content-Type': 'application/json',
             Authorization: `Bearer ${localStorage.getItem('token')}`,
           },
         }
@@ -197,7 +198,7 @@ export default function CreateTemplate() {
             Cancel
           </Button>
           <Button variant="primary" type="submit">
-            Create
+            Create Template
           </Button>
         </Form>
       )}
@@ -205,7 +206,9 @@ export default function CreateTemplate() {
       {/* Add Questions Section */}
       {templateId && (
         <div>
-          <h3>Add Questions to Template</h3>
+          <Alert variant="success">
+          Template created successfully! You can now add questions.
+          </Alert>
           <AddQuestion templateId={templateId} onSaveQuestions={handleSaveQuestions} />
         </div>
       )}

@@ -22,8 +22,10 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
 import SortableItem from './SortableItem'; // Custom component for sortable items
+import { useNavigate } from 'react-router-dom';
 
 const AddQuestion = ({ templateId, onSaveQuestions }) => {
+  const navigate = useNavigate();
   const [questions, setQuestions] = useState([]);
   // Track question counts for each type
   const [questionCounts, setQuestionCounts] = useState({
@@ -36,7 +38,6 @@ const AddQuestion = ({ templateId, onSaveQuestions }) => {
   // Handle adding a new question
   const handleAddQuestion = (type) => {
     if (questionCounts[type] >= 4) {
-      alert(`You can only add up to 4 ${type} questions.`);
       return;
     }
     const newQuestion = {
@@ -113,7 +114,7 @@ const AddQuestion = ({ templateId, onSaveQuestions }) => {
               onClick={() => handleAddQuestion('single-line')}
               disabled={questionCounts['single-line'] >= 4}
             >
-              Add Single-line Question
+              Add Single-line Question  ({4 - questionCounts['single-line']} left)
             </Button>
           </Col>
           <Col>
@@ -122,7 +123,7 @@ const AddQuestion = ({ templateId, onSaveQuestions }) => {
               onClick={() => handleAddQuestion('multi-line')}
               disabled={questionCounts['multi-line'] >= 4}
             >
-              Add Multi-line Question
+              Add Multi-line Question ({4 - questionCounts['multi-line']} left)
             </Button>
           </Col>
         </Row>
@@ -133,7 +134,7 @@ const AddQuestion = ({ templateId, onSaveQuestions }) => {
               onClick={() => handleAddQuestion('integer')}
               disabled={questionCounts.integer >= 4}
             >
-              Add Integer Question
+              Add Integer Question ({4 - questionCounts['integer']} left)
             </Button>
           </Col>
           <Col>
@@ -142,7 +143,7 @@ const AddQuestion = ({ templateId, onSaveQuestions }) => {
               onClick={() => handleAddQuestion('checkbox')}
               disabled={questionCounts.checkbox >= 4}
             >
-              Add Checkbox Question
+              Add Checkbox Question ({4 - questionCounts['checkbox']} left)
             </Button>
           </Col>
         </Row>
@@ -174,6 +175,13 @@ const AddQuestion = ({ templateId, onSaveQuestions }) => {
         </DndContext>
 
         {/* Save button */}
+        <Button
+            variant="warning"
+            className="me-2 mt-3"
+            onClick={() => navigate('/dashboard')}
+          >
+            Cancel
+          </Button>
         <Button
           variant="success"
           className="mt-3"
