@@ -15,6 +15,7 @@ import Layout from './components/Layout/Layout';
 import Templates from './components/Template/Templates';
 import CreateTemplate from './components/Template/CreateTemplate';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
+import EditTemplate from './components/Template/EditTemplate';
 function App() {
   return (
     <I18nextProvider i18n={i18n}>
@@ -71,6 +72,16 @@ function App() {
                   <Layout>
                     <ProtectedRoute>
                     <CreateTemplate />
+                  </ProtectedRoute>
+                  </Layout>
+                }
+              />
+              <Route
+                path="/templates/edit/:templateId"
+                element={
+                  <Layout>
+                    <ProtectedRoute>
+                    <EditTemplate />
                   </ProtectedRoute>
                   </Layout>
                 }

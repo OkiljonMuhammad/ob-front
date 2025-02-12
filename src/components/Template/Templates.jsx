@@ -28,6 +28,7 @@ export default function Templates() {
       });
       const { templates: fetchedTemplates, pagination: fetchedPagination } =
         response.data;
+      console.log(response.data);
       setTemplates(fetchedTemplates);
       setPagination(fetchedPagination);
     } catch (error) {
@@ -73,6 +74,7 @@ export default function Templates() {
                 <th>Title</th>
                 <th>Date</th>
                 <th>Topic</th>
+                <th>Users</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -82,6 +84,7 @@ export default function Templates() {
                   <td>{template.title}</td>
                   <td>{new Date(template.createdAt).toLocaleDateString()}</td>
                   <td>{template.Topic?.topicName || 'No Topic'}</td>
+                  <td>{template.User?.username|| 'No User'}</td>
                   <td>
                     <Button
                       variant="warning"
