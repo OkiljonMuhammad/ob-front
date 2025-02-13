@@ -28,8 +28,10 @@ const Header = ({ theme }) => {
               </>
             ) : (
               <>
-              <Nav.Link href="/dashboard">Dashboard</Nav.Link>
-              <Nav.Link onClick={logout} href="/">Logout</Nav.Link>
+                <Nav.Link href="/dashboard">Dashboard</Nav.Link>
+                <Nav.Link onClick={logout} href="/">
+                  Logout
+                </Nav.Link>
               </>
             )}
           </Nav>

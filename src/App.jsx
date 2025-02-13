@@ -1,6 +1,6 @@
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import 'react-toastify/dist/ReactToastify.css'; 
+import 'react-toastify/dist/ReactToastify.css';
 import { ToastContainer } from 'react-toastify';
 import { I18nextProvider } from 'react-i18next';
 import i18n from './i18n/i18n';
@@ -16,6 +16,7 @@ import Templates from './components/Template/Templates';
 import CreateTemplate from './components/Template/CreateTemplate';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import EditTemplate from './components/Template/EditTemplate';
+import DeleteTemplate from './components/Template/deleteTemplate';
 function App() {
   return (
     <I18nextProvider i18n={i18n}>
@@ -53,26 +54,28 @@ function App() {
                 element={
                   <Layout>
                     <ProtectedRoute>
-                    <Dashboard />
-                  </ProtectedRoute>
+                      <Dashboard />
+                    </ProtectedRoute>
                   </Layout>
                 }
               />
-              <Route path="/templates" 
-              element={
-                <Layout>
-                <ProtectedRoute>
-                <Templates />
-                </ProtectedRoute>
-                </Layout>
-              } />
+              <Route
+                path="/templates"
+                element={
+                  <Layout>
+                    <ProtectedRoute>
+                      <Templates />
+                    </ProtectedRoute>
+                  </Layout>
+                }
+              />
               <Route
                 path="/templates/create"
                 element={
                   <Layout>
                     <ProtectedRoute>
-                    <CreateTemplate />
-                  </ProtectedRoute>
+                      <CreateTemplate />
+                    </ProtectedRoute>
                   </Layout>
                 }
               />
@@ -81,22 +84,33 @@ function App() {
                 element={
                   <Layout>
                     <ProtectedRoute>
-                    <EditTemplate />
-                  </ProtectedRoute>
+                      <EditTemplate />
+                    </ProtectedRoute>
+                  </Layout>
+                }
+              />
+              <Route
+                path="/templates/delete/:templateId"
+                element={
+                  <Layout>
+                    <ProtectedRoute>
+                      <DeleteTemplate />
+                    </ProtectedRoute>
                   </Layout>
                 }
               />
             </Routes>
             <ToastContainer
-            position="top-right" 
-            autoClose={3000}     
-            hideProgressBar={false} 
-            newestOnTop={false}  
-            closeOnClick        
-            rtl={false}         
-            pauseOnFocusLoss     
-            draggable          
-            pauseOnHover />
+              position="top-right"
+              autoClose={3000}
+              hideProgressBar={false}
+              newestOnTop={false}
+              closeOnClick
+              rtl={false}
+              pauseOnFocusLoss
+              draggable
+              pauseOnHover
+            />
           </Router>
         </AuthProvider>
       </ThemeProvider>

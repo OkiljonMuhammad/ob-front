@@ -41,7 +41,7 @@ const AddQuestion = ({ templateId, onSaveQuestions }) => {
       return;
     }
     const newQuestion = {
-      id: Date.now(), 
+      id: Date.now(),
       type,
       text: '',
       isVisibleInTable: true,
@@ -56,17 +56,13 @@ const AddQuestion = ({ templateId, onSaveQuestions }) => {
   // Handle updating a question's text
   const handleQuestionChange = (id, field, value) => {
     setQuestions((prevQuestions) =>
-      prevQuestions.map((q) =>
-        q.id === id ? { ...q, [field]: value } : q
-      )
+      prevQuestions.map((q) => (q.id === id ? { ...q, [field]: value } : q))
     );
   };
 
   // Handle removing a question
   const handleRemoveQuestion = (id, type) => {
-    setQuestions((prevQuestions) =>
-      prevQuestions.filter((q) => q.id !== id)
-    );
+    setQuestions((prevQuestions) => prevQuestions.filter((q) => q.id !== id));
     setQuestionCounts((prevCounts) => ({
       ...prevCounts,
       [type]: prevCounts[type] - 1,
@@ -114,7 +110,8 @@ const AddQuestion = ({ templateId, onSaveQuestions }) => {
               onClick={() => handleAddQuestion('single-line')}
               disabled={questionCounts['single-line'] >= 4}
             >
-              Add Single-line Question  ({4 - questionCounts['single-line']} left)
+              Add Single-line Question ({4 - questionCounts['single-line']}{' '}
+              left)
             </Button>
           </Col>
           <Col>
@@ -167,7 +164,9 @@ const AddQuestion = ({ templateId, onSaveQuestions }) => {
                   onChange={(field, value) =>
                     handleQuestionChange(question.id, field, value)
                   }
-                  onDelete={() => handleRemoveQuestion(question.id, question.type)}
+                  onDelete={() =>
+                    handleRemoveQuestion(question.id, question.type)
+                  }
                 />
               ))}
             </ListGroup>
@@ -176,12 +175,12 @@ const AddQuestion = ({ templateId, onSaveQuestions }) => {
 
         {/* Save button */}
         <Button
-            variant="warning"
-            className="me-2 mt-3"
-            onClick={() => navigate('/dashboard')}
-          >
-            Cancel
-          </Button>
+          variant="warning"
+          className="me-2 mt-3"
+          onClick={() => navigate('/dashboard')}
+        >
+          Cancel
+        </Button>
         <Button
           variant="success"
           className="mt-3"

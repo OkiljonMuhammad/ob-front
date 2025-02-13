@@ -3,10 +3,14 @@ import { Dropdown, Badge, Card, Row, Col } from 'react-bootstrap';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 
-const TopicSuggest = ({ onTopicSelect }) => {
+const TopicSuggest = ({ onTopicSelect, initialSelectedTopics = [] }) => {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
-  const [topics, setTopics] = useState([]); // State to hold all topics
-  const [selectedTopic, setSelectedTopic] = useState([]); // State to hold selected topics
+
+  // State to hold all topics
+  const [topics, setTopics] = useState([]);
+
+  // State to hold selected topics
+  const [selectedTopic, setSelectedTopic] = useState(initialSelectedTopics);
 
   // Fetch topics from the database
   const fetchTopics = async () => {
@@ -28,16 +32,26 @@ const TopicSuggest = ({ onTopicSelect }) => {
     fetchTopics();
   }, []);
 
+  // Synchronize selectedTopic state with initialSelectedTopics prop
+  useEffect(() => {
+    setSelectedTopic(initialSelectedTopics);
+  }, [initialSelectedTopics]);
+
   // Handle topic selection
   const handleTopicSelect = (topicId, topicName) => {
-    if (!selectedTopic.some((topic) => topic.id === topicId)) {
-      // Add the topic to the selected list
-      setSelectedTopic((prevSelected) => [
-        ...prevSelected,
-        { id: topicId, name: topicName },
-      ]);
-      onTopicSelect(topicId); // Notify the parent component
-    }
+    setSelectedTopic((prevSelected) => {
+      if (!prevSelected.some((topic) => topic.id === topicId)) {
+        const newTopic = { id: topicId, name: topicName };
+
+        // Defer the onTopicSelect call to avoid updating the parent during render
+        setTimeout(() => {
+          onTopicSelect(newTopic); // Notify the parent component
+        }, 0);
+
+        return [...prevSelected, newTopic];
+      }
+      return prevSelected;
+    });
   };
 
   // Handle removing a selected topic

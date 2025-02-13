@@ -44,9 +44,7 @@ const SortableItem = ({ id, question, onChange, onDelete }) => {
               type="switch"
               label="Visible in Table"
               checked={question.isVisibleInTable}
-              onChange={(e) =>
-                onChange('isVisibleInTable', e.target.checked)
-              }
+              onChange={(e) => onChange('isVisibleInTable', e.target.checked)}
             />
           </Form.Group>
         </Col>

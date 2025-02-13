@@ -5,7 +5,7 @@ import TagAutoComplete from '../Tag/TagAutoComplete';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import ReactMarkdown from 'react-markdown';
-import TopicSuggest from '../Topic/TopicSuggest';
+import EditTopic from '../Topic/EditTopic';
 
 export default function EditTemplate() {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -28,11 +28,16 @@ export default function EditTemplate() {
   useEffect(() => {
     const fetchTemplate = async () => {
       try {
-        const response = await axios.get(`${BASE_URL}/api/template/${templateId}`, {
-          headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
-        });
+        const response = await axios.get(
+          `${BASE_URL}/api/template/${templateId}`,
+          {
+            headers: {
+              Authorization: `Bearer ${localStorage.getItem('token')}`,
+            },
+          }
+        );
         const templateData = response.data.template;
-        console.log(response.data.template)
+        console.log(response.data.template);
         setFormData({
           title: templateData.title || '',
           description: templateData.description || '',
@@ -40,15 +45,18 @@ export default function EditTemplate() {
           topicName: templateData.Topic?.topicName || '',
           image: templateData.image || '',
           isPublic: templateData.isPublic || false,
-          tags: templateData.Tags?.map((tag) => ({
-            id: tag.id,
-            tagName: tag.tagName,
-          })) || [],
+          tags:
+            templateData.Tags?.map((tag) => ({
+              id: tag.id,
+              tagName: tag.tagName,
+            })) || [],
         });
         setLoading(false);
       } catch (error) {
         console.error('Error fetching template:', error);
-        setError(error.response?.data?.message || 'Failed to load template data.');
+        setError(
+          error.response?.data?.message || 'Failed to load template data.'
+        );
         setLoading(false);
       }
     };
@@ -66,11 +74,9 @@ export default function EditTemplate() {
       return;
     }
     try {
-      await axios.put(
-        `${BASE_URL}/api/template/${templateId}`,
-        formData,
-        { headers: { Authorization: `Bearer ${localStorage.getItem('token')}` } }
-      );
+      await axios.put(`${BASE_URL}/api/template/${templateId}`, formData, {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      });
       toast.success('Template updated successfully!');
       navigate('/dashboard');
     } catch (error) {
@@ -100,7 +106,9 @@ export default function EditTemplate() {
                 type="text"
                 name="title"
                 value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, title: e.target.value })
+                }
                 required
               />
             </Form.Group>
@@ -115,7 +123,9 @@ export default function EditTemplate() {
                 rows={6}
                 name="description"
                 value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, description: e.target.value })
+                }
                 placeholder="Use Markdown syntax for formatting (e.g., **bold**, *italic*, - list)"
               />
             </Form.Group>
@@ -141,26 +151,31 @@ export default function EditTemplate() {
           </Col>
         </Row>
         {formData.topicName && (
-  <Row className="mb-4">
-    <Col>
-      <Form.Group controlId="topicName">
-        <Form.Label>Selected Topic:</Form.Label>
-        <p>{formData.topicName}</p>
-      </Form.Group>
-    </Col>
-  </Row>
-)}
+          <Row className="mb-4">
+            <Col>
+              <Form.Group controlId="topicName">
+                <Form.Label>Selected Topic:</Form.Label>
+                <p>{formData.topicName}</p>
+              </Form.Group>
+            </Col>
+          </Row>
+        )}
         <Row className="mb-4">
           <Col>
             <Form.Group controlId="topicId">
               <Form.Label>Topic</Form.Label>
-              <TopicSuggest
+              <EditTopic
                 onTopicSelect={(topic) =>
                   setFormData((prevData) => ({
                     ...prevData,
                     topicId: topic.id,
                     topicName: topic.name,
                   }))
+                }
+                initialSelectedTopics={
+                  formData.topicId && formData.topicName
+                    ? [{ id: formData.topicId, name: formData.topicName }]
+                    : []
                 }
               />
             </Form.Group>
@@ -174,7 +189,9 @@ export default function EditTemplate() {
                 type="url"
                 name="image"
                 value={formData.image}
-                onChange={(e) => setFormData({ ...formData, image: e.target.value })}
+                onChange={(e) =>
+                  setFormData({ ...formData, image: e.target.value })
+                }
               />
             </Form.Group>
           </Col>
@@ -187,7 +204,9 @@ export default function EditTemplate() {
                 label="Public Template"
                 name="isPublic"
                 checked={formData.isPublic}
-                onChange={(e) => setFormData({ ...formData, isPublic: e.target.checked })}
+                onChange={(e) =>
+                  setFormData({ ...formData, isPublic: e.target.checked })
+                }
               />
             </Form.Group>
           </Col>
@@ -197,7 +216,10 @@ export default function EditTemplate() {
             <Col>
               <Form.Group controlId="selectedTags">
                 <Form.Label>Selected Tags:</Form.Label>
-                <p>{formData.tags?.map(tag => tag.tagName).join(', ')}</p> {/* Replace with tag names if available */}
+                <p>
+                  {formData.tags?.map((tag) => tag.tagName).join(', ')}
+                </p>{' '}
+                {/* Replace with tag names if available */}
               </Form.Group>
             </Col>
           </Row>
@@ -207,7 +229,7 @@ export default function EditTemplate() {
             <Form.Group controlId="tags">
               <Form.Label>Tags</Form.Label>
               <TagAutoComplete
-                onTagsChange={(tags) => setFormData({ ...formData, tags: tags.map(tag => tag.id) })}
+                onTagsChange={(tags) => setFormData({ ...formData, tags })}
               />
             </Form.Group>
           </Col>

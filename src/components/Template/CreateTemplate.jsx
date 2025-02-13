@@ -206,9 +206,12 @@ export default function CreateTemplate() {
       {templateId && (
         <div>
           <Alert variant="success">
-          Template created successfully! You can now add questions.
+            Template created successfully! You can now add questions.
           </Alert>
-          <AddQuestion templateId={templateId} onSaveQuestions={handleSaveQuestions} />
+          <AddQuestion
+            templateId={templateId}
+            onSaveQuestions={handleSaveQuestions}
+          />
         </div>
       )}
     </Container>

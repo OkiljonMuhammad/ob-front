@@ -10,9 +10,11 @@ const TagAutoComplete = ({ onTagsChange }) => {
 
   // Fetch tag suggestions from the backend
   const loadOptions = async (input) => {
-    if (!input) return;
+    if (!input || input.length < 2) return; // Only fetch suggestions for inputs with at least 2 characters
     try {
-      const response = await axios.get(`${BASE_URL}/api/tag/suggest?q=${input}`);
+      const response = await axios.get(
+        `${BASE_URL}/api/tag/suggest?q=${input}`
+      );
       const tags = response.data.tags.map((tag) => ({
         value: tag.id,
         label: tag.tagName,
@@ -29,7 +31,7 @@ const TagAutoComplete = ({ onTagsChange }) => {
     if (newValue.length >= 2) {
       loadOptions(newValue);
     } else {
-      setOptions([]);
+      setOptions([]); // Clear options if input is too short
     }
   };
 
@@ -43,14 +45,17 @@ const TagAutoComplete = ({ onTagsChange }) => {
   const handleKeyDown = (event) => {
     if (event.key === 'Enter' && inputValue.trim()) {
       event.preventDefault(); // Prevent form submission
-      
-      // Check if tag already exists
-      const isDuplicate = selectedTags.some(tag => tag.label.toLowerCase() === inputValue.toLowerCase());
-      
+
+      // Check if tag already exists (case-insensitive)
+      const isDuplicate = selectedTags.some(
+        (tag) => tag.label.toLowerCase() === inputValue.toLowerCase()
+      );
+
       if (!isDuplicate) {
         const newTag = { value: inputValue, label: inputValue };
-        setSelectedTags([...selectedTags, newTag]);
-        onTagsChange([...selectedTags, newTag].map((tag) => tag.label));
+        const updatedTags = [...selectedTags, newTag];
+        setSelectedTags(updatedTags);
+        onTagsChange(updatedTags.map((tag) => tag.label)); // Notify parent of updated tags
       }
 
       setInputValue(''); // Clear input after adding tag
@@ -66,8 +71,9 @@ const TagAutoComplete = ({ onTagsChange }) => {
       onChange={handleChange}
       onKeyDown={handleKeyDown}
       inputValue={inputValue}
-      placeholder="Enter or select tags..."
+      placeholder="Type to search or create a new tag..."
       allowCreateWhileLoading
+      formatCreateLabel={(inputValue) => `Create "${inputValue}"`}
     />
   );
 };

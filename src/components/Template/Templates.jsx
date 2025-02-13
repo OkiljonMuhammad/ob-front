@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Table, Button, Row, Col, Pagination } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
+import LikeTemplate from './LikeTemplate';
 
 export default function Templates() {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -28,7 +29,6 @@ export default function Templates() {
       });
       const { templates: fetchedTemplates, pagination: fetchedPagination } =
         response.data;
-      console.log(response.data);
       setTemplates(fetchedTemplates);
       setPagination(fetchedPagination);
     } catch (error) {
@@ -75,6 +75,7 @@ export default function Templates() {
                 <th>Date</th>
                 <th>Topic</th>
                 <th>Users</th>
+                <th>Likes</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -84,22 +85,26 @@ export default function Templates() {
                   <td>{template.title}</td>
                   <td>{new Date(template.createdAt).toLocaleDateString()}</td>
                   <td>{template.Topic?.topicName || 'No Topic'}</td>
-                  <td>{template.User?.username|| 'No User'}</td>
+                  <td>{template.User?.username || 'No User'}</td>
+                  <td>
+                    {' '}
+                    <LikeTemplate templateId={template.id} />
+                  </td>
                   <td>
                     <Button
                       variant="warning"
                       size="sm"
                       className="me-2"
-                      onClick={() =>
-                        navigate(`/templates/edit/${template.id}`)
-                      }
+                      onClick={() => navigate(`/templates/edit/${template.id}`)}
                     >
                       Edit
                     </Button>
                     <Button
                       variant="danger"
                       size="sm"
-                      onClick={() => console.log('Delete template:', template.id)}
+                      onClick={() =>
+                        navigate(`/templates/delete/${template.id}`)
+                      }
                     >
                       Delete
                     </Button>
@@ -112,7 +117,9 @@ export default function Templates() {
           {/* Pagination Controls */}
           <Pagination>
             {pagination.prevPage && (
-              <Pagination.Prev onClick={() => handlePageChange(pagination.page - 1)} />
+              <Pagination.Prev
+                onClick={() => handlePageChange(pagination.page - 1)}
+              />
             )}
             {[...Array(pagination.totalPages)].map((_, index) => (
               <Pagination.Item
@@ -124,7 +131,9 @@ export default function Templates() {
               </Pagination.Item>
             ))}
             {pagination.nextPage && (
-              <Pagination.Next onClick={() => handlePageChange(pagination.page + 1)} />
+              <Pagination.Next
+                onClick={() => handlePageChange(pagination.page + 1)}
+              />
             )}
           </Pagination>
         </>
