@@ -37,7 +37,6 @@ export default function EditTemplate() {
           }
         );
         const templateData = response.data.template;
-        console.log(response.data.template);
         setFormData({
           title: templateData.title || '',
           description: templateData.description || '',
@@ -69,7 +68,7 @@ export default function EditTemplate() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!formData.title || !formData.description || !formData.topicId) {
+    if (!formData.title || !formData.topicId) {
       toast.error('Please fill in all required fields.');
       return;
     }
