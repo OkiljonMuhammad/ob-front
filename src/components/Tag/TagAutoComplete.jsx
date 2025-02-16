@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import Select from 'react-select';
 import axios from 'axios';
 
 const TagAutoComplete = ({ onTagsChange }) => {
   const [inputValue, setInputValue] = useState('');
   const [options, setOptions] = useState([]);
-  const [selectedTags, setSelectedTags] = useState();
+  const [selectedTags, setSelectedTags] = useState([]);
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   // Fetch tag suggestions from the backend

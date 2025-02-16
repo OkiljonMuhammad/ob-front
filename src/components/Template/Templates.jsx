@@ -3,12 +3,13 @@ import { Table, Button, Row, Col, Pagination, Form } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { debounce } from 'lodash';
+import { toast } from 'react-toastify';
 
 export default function Templates() {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [templates, setTemplates] = useState([]);
   const [topics, setTopics] = useState([]);
-  const [searchQuery, setSearchQuery] = useState(''); 
+  const [searchQuery, setSearchQuery] = useState('');
   const [selectedTopic, setSelectedTopic] = useState('');
   const [pagination, setPagination] = useState({
     total: 0,
@@ -30,12 +31,20 @@ export default function Templates() {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
-      const { templates: fetchedTemplates, pagination: fetchedPagination } =
-        response.data;
-      setTemplates(fetchedTemplates);
-      setPagination(fetchedPagination);
+
+      if (response.data) {
+        setTemplates(response.data.templates || []);
+        setPagination(response.data.pagination || {
+          total: 0,
+          page: 1,
+          totalPages: 1,
+          prevPage: null,
+          nextPage: null,
+        });
+      }
     } catch (error) {
       console.error('Error fetching templates:', error);
+      toast.error('Failed to load templates.');
     } finally {
       setLoading(false);
     }
@@ -48,48 +57,46 @@ export default function Templates() {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
-      setTopics(response.data.topics); 
+      setTopics(response.data.topics || []);
     } catch (error) {
       console.error('Error fetching topics:', error);
-      toast.error('Failed to load topics. Please try again.');
+      toast.error('Failed to load topics.');
     }
   };
 
   useEffect(() => {
-    fetchTemplates(pagination.page, 10, selectedTopic, searchQuery);
     fetchTopics();
-  }, [pagination.page, searchQuery, selectedTopic]);
+  }, []);
 
   const debouncedFetchTemplates = useCallback(
     debounce((query, topic) => {
       fetchTemplates(1, 10, topic, query);
-    }),
+    }, 300),
     []
   );
+
+  useEffect(() => {
+    debouncedFetchTemplates(searchQuery, selectedTopic);
+  }, [searchQuery, selectedTopic]);
 
   const handlePageChange = (newPage) => {
     fetchTemplates(newPage, 10, selectedTopic, searchQuery);
   };
-  
+
   const handleSearchChange = (e) => {
-    const value = e.target.value;
-    setSearchQuery(value);
-    debouncedFetchTemplates(value, selectedTopic);
+    setSearchQuery(e.target.value);
   };
-  
+
   const handleTopicChange = (e) => {
-    setSelectedTopic(e.target.value); 
-    fetchTemplates(1, 10, e.target.value, searchQuery); 
+    const value = e.target.value;
+    setSelectedTopic(value);
   };
 
   return (
     <>
       <Row className="mb-3">
         <Col>
-          <Button
-            variant="primary"
-            onClick={() => navigate('/templates/create')}
-          >
+          <Button variant="primary" onClick={() => navigate('/templates/create')}>
             Create Template
           </Button>
         </Col>
@@ -105,10 +112,10 @@ export default function Templates() {
           <Form.Select value={selectedTopic} onChange={handleTopicChange}>
             <option value="">All Topics</option>
             {topics.map((topic) => (
-          <option key={topic.id} value={topic.topicName}>
-            {topic.topicName}
-          </option>
-        ))}
+              <option key={topic.id} value={topic.topicName}>
+                {topic.topicName}
+              </option>
+            ))}
           </Form.Select>
         </Col>
       </Row>
@@ -133,17 +140,17 @@ export default function Templates() {
                   <td>{new Date(template.createdAt).toLocaleDateString()}</td>
                   <td>{template.Topic?.topicName || 'No Topic'}</td>
                   <td>
-                  <Button
+                    <Button
                       variant="info"
                       size="sm"
                       className="me-2"
                       onClick={() =>
-                        navigate(`/templates/view/${template.id}`,{
-                          state: {apiUrl: 'api/template', goBackRoute: '/dashboard' },
+                        navigate(`/templates/view/${template.id}`, {
+                          state: { apiUrl: 'api/template', goBackRoute: '/dashboard' },
                         })
                       }
                     >
-                      View Template
+                      View
                     </Button>
                     <Button
                       variant="warning"
@@ -156,9 +163,7 @@ export default function Templates() {
                     <Button
                       variant="danger"
                       size="sm"
-                      onClick={() =>
-                        navigate(`/templates/delete/${template.id}`)
-                      }
+                      onClick={() => navigate(`/templates/delete/${template.id}`)}
                     >
                       Delete
                     </Button>
@@ -168,12 +173,9 @@ export default function Templates() {
             </tbody>
           </Table>
 
-          {/* Pagination Controls */}
           <Pagination>
             {pagination.prevPage && (
-              <Pagination.Prev
-                onClick={() => handlePageChange(pagination.page - 1)}
-              />
+              <Pagination.Prev onClick={() => handlePageChange(pagination.page - 1)} />
             )}
             {[...Array(pagination.totalPages)].map((_, index) => (
               <Pagination.Item
@@ -185,9 +187,7 @@ export default function Templates() {
               </Pagination.Item>
             ))}
             {pagination.nextPage && (
-              <Pagination.Next
-                onClick={() => handlePageChange(pagination.page + 1)}
-              />
+              <Pagination.Next onClick={() => handlePageChange(pagination.page + 1)} />
             )}
           </Pagination>
         </>

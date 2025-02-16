@@ -76,6 +76,7 @@ export default function EditTemplate() {
       await axios.put(`${BASE_URL}/api/template/${templateId}`, formData, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
+      console.log(formData);
       toast.success('Template updated successfully!');
       navigate('/dashboard');
     } catch (error) {
@@ -228,7 +229,9 @@ export default function EditTemplate() {
             <Form.Group controlId="tags">
               <Form.Label>Tags</Form.Label>
               <EditTag
-                onTagsChange={(tags) => setFormData({ ...formData, tags: uniqueTags })}
+                onTagsChange={(tags) => {
+                  
+                  setFormData({ ...formData, tags })}}
                 initialTags={ formData.tags}
               />
             </Form.Group>

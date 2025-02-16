@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
-import Select from 'react-select';
+import React, { useState, useEffect, useCallback } from 'react';
+import CreatableSelect from 'react-select/creatable';
 import axios from 'axios';
+import { debounce } from 'lodash';
 
 const EditTag = ({ onTagsChange, initialTags }) => {
   const [inputValue, setInputValue] = useState('');
@@ -9,72 +10,64 @@ const EditTag = ({ onTagsChange, initialTags }) => {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
   useEffect(() => {
-    if (Array.isArray(initialTags)) {
-      setSelectedTags(initialTags);
-    } else {
-      setSelectedTags([]);
-    }
+    setSelectedTags(initialTags || []);
   }, [initialTags]);
 
-  // Fetch tag suggestions from the backend
-  const loadOptions = async (input) => {
-    if (!input || input.length < 2) return; // Only fetch suggestions for inputs with at least 2 characters
-    try {
-      const response = await axios.get(
-        `${BASE_URL}/api/tag/suggest?q=${input}`
-      );
-      const tags = response.data.tags
-        .map((tag) => ({
-          value: tag.id,
-          label: tag.tagName,
-        }))
-        .filter((tag) => !selectedTags.some((selected) => selected.value === tag.value));
-      setOptions(tags);
-    } catch (error) {
-      console.error('Error fetching tag suggestions:', error);
+  // Fetch tag suggestions with debouncing
+  const loadOptions = useCallback(
+    debounce(async (input) => {
+      if (input.length < 2) return; // Only fetch when input has 2+ characters
+      try {
+        const response = await axios.get(`${BASE_URL}/api/tag/suggest?q=${input}`);
+        const tags = response.data.tags
+          .map((tag) => ({ value: tag.id, label: tag.tagName }))
+          .filter((tag) => !selectedTags.some((selected) => selected.value === tag.value));
+        setOptions(tags);
+      } catch (error) {
+        console.error('Error fetching tag suggestions:', error);
+      }
+    }, 300), // Debounce API calls to prevent excessive requests
+    [selectedTags]
+  );
+
+  // Handle input changes for searching/creating
+  const handleInputChange = (newValue, { action }) => {
+    if (action === 'input-change') {
+      setInputValue(newValue);
+      if (newValue.length >= 2) {
+        loadOptions(newValue);
+      } else {
+        setOptions([]); // Clear options if input is too short
+      }
     }
   };
 
-  // Handle input changes
-  const handleInputChange = (newValue) => {
-    setInputValue(newValue);
-    if (newValue.length >= 2) {
-      loadOptions(newValue);
-    } else {
-      setOptions([]); // Clear options if input is too short
-    }
-  };
-
-  // Handle tag selection, including new custom tags
+  // Handle tag selection
   const handleChange = (selectedOptions) => {
     setSelectedTags(selectedOptions);
     setInputValue('');
-    onTagsChange(selectedOptions.map((option) => option.label)); // Pass selected tags to parent
+    onTagsChange(selectedOptions.map((option) => option.label));
   };
 
-  // Handle adding a new custom tag when the user presses Enter
+  // Handle adding new custom tag
   const handleKeyDown = (event) => {
     if (event.key === 'Enter' && inputValue.trim()) {
       event.preventDefault(); // Prevent form submission
-
-      // Check if tag already exists (case-insensitive)
-      const isDuplicate = selectedTags.some(
-        (tag) => tag.label.toLowerCase() === inputValue.toLowerCase()
-      );
+      const normalizedInput = inputValue.toLowerCase();
+      const isDuplicate = selectedTags.some((tag) => tag.label.toLowerCase() === normalizedInput);
 
       if (!isDuplicate) {
         const newTag = { value: inputValue, label: inputValue };
-        const updatedTags = [...selectedTags, newTag];
-        setSelectedTags(updatedTags);
-        onTagsChange(updatedTags.map((tag) => tag.label)); // Notify parent of updated tags
+        setSelectedTags([...selectedTags, newTag]);
+        onTagsChange([...selectedTags, newTag].map((tag) => tag.label));
       }
 
-      setInputValue(''); // Clear input after adding tag
+      setInputValue(''); // Clear input
     }
   };
 
   return (
-    <Select
+    <CreatableSelect
       isMulti
       options={options}
       value={selectedTags}
@@ -83,7 +76,6 @@ const EditTag = ({ onTagsChange, initialTags }) => {
       onKeyDown={handleKeyDown}
       inputValue={inputValue}
       placeholder="Type to search or create a new tag..."
-      allowCreateWhileLoading
       formatCreateLabel={(inputValue) => `Create "${inputValue}"`}
     />
   );

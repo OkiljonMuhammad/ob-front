@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Table, Button, Row, Col, Pagination, Form, Card } from 'react-bootstrap';
+import { Button, Row, Col, Pagination, Form, Card } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { debounce } from 'lodash';
 
-const TemplateGallery = () => {
+const TemplateGallery = ({ selectedTagId: tagId }) => {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [templates, setTemplates] = useState([]);
   const [topics, setTopics] = useState([]);
@@ -22,11 +22,11 @@ const TemplateGallery = () => {
   const navigate = useNavigate();
 
   // Fetch templates from the API
-  const fetchTemplates = async (page = 1, limit = 6, topic = '', search = '') => {
+  const fetchTemplates = async (page = 1, limit = 6, tagId = null, topic = '', search = '') => {
     try {
       setLoading(true);
       const response = await axios.get(`${BASE_URL}/api/template/templates/public`, {
-        params: { page, limit, topic, search },
+        params: { page, limit, tagId, topic, search },
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
 
@@ -38,13 +38,12 @@ const TemplateGallery = () => {
         prevPage: null,
         nextPage: null,
       });
-
     } catch (error) {
       console.error('Error fetching templates:', error);
     } finally {
       setLoading(false);
     }
-  };
+  };  
 
   // Fetch topics
   const fetchTopics = async () => {
@@ -57,35 +56,35 @@ const TemplateGallery = () => {
       console.error('Error fetching topics:', error);
     }
   };
-
-  // Initial data fetch
-  useEffect(() => {
-    fetchTemplates(1, 6, selectedTopic, searchQuery);
-    fetchTopics();
-  }, []); // Runs once when the component mounts
-
-  // Debounced search fetch
   const debouncedFetchTemplates = useCallback(
-    debounce((query, topic) => fetchTemplates(1, 6, topic, query), 500),
-    []
+    debounce((query, topic, tagId) => {
+      fetchTemplates(1, 6, tagId, topic, query);
+    }, 500),
+    [tagId] 
   );
+
+  useEffect(() => {
+    debouncedFetchTemplates(searchQuery, selectedTopic, tagId);
+    return () => debouncedFetchTemplates.cancel();
+  }, [searchQuery, selectedTopic, tagId]);
+
+  useEffect(() => {
+    fetchTopics();
+  }, []);
 
   // Handle search input
   const handleSearchChange = (e) => {
-    const value = e.target.value;
-    setSearchQuery(value);
-    debouncedFetchTemplates(value, selectedTopic);
+    setSearchQuery(e.target.value);
   };
 
   // Handle topic change
   const handleTopicChange = (e) => {
     setSelectedTopic(e.target.value);
-    fetchTemplates(1, 6, e.target.value, searchQuery);
   };
 
   // Handle page change
   const handlePageChange = (newPage) => {
-    fetchTemplates(newPage, 6, selectedTopic, searchQuery);
+    fetchTemplates(newPage, 6, tagId, selectedTopic, searchQuery);
   };
 
   return (
@@ -146,7 +145,6 @@ const TemplateGallery = () => {
             {pagination.prevPage !== null && (
               <Pagination.Prev onClick={() => handlePageChange(pagination.page - 1)} />
             )}
-
             {[...Array(pagination.totalPages || 1)].map((_, index) => (
               <Pagination.Item
                 key={index + 1}
@@ -156,7 +154,6 @@ const TemplateGallery = () => {
                 {index + 1}
               </Pagination.Item>
             ))}
-
             {pagination.nextPage !== null && (
               <Pagination.Next onClick={() => handlePageChange(pagination.page + 1)} />
             )}
