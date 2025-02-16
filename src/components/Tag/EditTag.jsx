@@ -2,11 +2,19 @@ import React, { useState, useEffect } from 'react';
 import Select from 'react-select';
 import axios from 'axios';
 
-const TagAutoComplete = ({ onTagsChange }) => {
+const EditTag = ({ onTagsChange, initialTags }) => {
   const [inputValue, setInputValue] = useState('');
   const [options, setOptions] = useState([]);
-  const [selectedTags, setSelectedTags] = useState();
+  const [selectedTags, setSelectedTags] = useState(initialTags || []);
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+
+  useEffect(() => {
+    if (Array.isArray(initialTags)) {
+      setSelectedTags(initialTags);
+    } else {
+      setSelectedTags([]);
+    }
+  }, [initialTags]);
 
   // Fetch tag suggestions from the backend
   const loadOptions = async (input) => {
@@ -15,10 +23,12 @@ const TagAutoComplete = ({ onTagsChange }) => {
       const response = await axios.get(
         `${BASE_URL}/api/tag/suggest?q=${input}`
       );
-      const tags = response.data.tags.map((tag) => ({
-        value: tag.id,
-        label: tag.tagName,
-      }));
+      const tags = response.data.tags
+        .map((tag) => ({
+          value: tag.id,
+          label: tag.tagName,
+        }))
+        .filter((tag) => !selectedTags.some((selected) => selected.value === tag.value));
       setOptions(tags);
     } catch (error) {
       console.error('Error fetching tag suggestions:', error);
@@ -38,6 +48,7 @@ const TagAutoComplete = ({ onTagsChange }) => {
   // Handle tag selection, including new custom tags
   const handleChange = (selectedOptions) => {
     setSelectedTags(selectedOptions);
+    setInputValue('');
     onTagsChange(selectedOptions.map((option) => option.label)); // Pass selected tags to parent
   };
 
@@ -78,4 +89,4 @@ const TagAutoComplete = ({ onTagsChange }) => {
   );
 };
 
-export default TagAutoComplete;
+export default EditTag;

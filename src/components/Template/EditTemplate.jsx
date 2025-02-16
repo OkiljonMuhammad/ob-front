@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Form, Button, Row, Col, Container, Alert } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
-import TagAutoComplete from '../Tag/TagAutoComplete';
+import EditTag from '../Tag/EditTag';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import ReactMarkdown from 'react-markdown';
@@ -25,40 +25,40 @@ export default function EditTemplate() {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
+  const fetchTemplate = async () => {
+    try {
+      const response = await axios.get(
+        `${BASE_URL}/api/template/${templateId}`,
+        {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        }
+      );
+      const templateData = response.data.template;
+      setFormData({
+        title: templateData.title || '',
+        description: templateData.description || '',
+        topicId: templateData.Topic?.id || '',
+        topicName: templateData.Topic?.topicName || '',
+        image: templateData.image || '',
+        isPublic: templateData.isPublic || false,
+        tags:
+          templateData.Tags?.map((tag) => ({
+            value: tag.id,
+            label: tag.tagName,
+          })) || [],
+      });
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching template:', error);
+      setError(
+        error.response?.data?.message || 'Failed to load template data.'
+      );
+      setLoading(false);
+    }
+  };
   useEffect(() => {
-    const fetchTemplate = async () => {
-      try {
-        const response = await axios.get(
-          `${BASE_URL}/api/template/${templateId}`,
-          {
-            headers: {
-              Authorization: `Bearer ${localStorage.getItem('token')}`,
-            },
-          }
-        );
-        const templateData = response.data.template;
-        setFormData({
-          title: templateData.title || '',
-          description: templateData.description || '',
-          topicId: templateData.Topic?.id || '',
-          topicName: templateData.Topic?.topicName || '',
-          image: templateData.image || '',
-          isPublic: templateData.isPublic || false,
-          tags:
-            templateData.Tags?.map((tag) => ({
-              id: tag.id,
-              tagName: tag.tagName,
-            })) || [],
-        });
-        setLoading(false);
-      } catch (error) {
-        console.error('Error fetching template:', error);
-        setError(
-          error.response?.data?.message || 'Failed to load template data.'
-        );
-        setLoading(false);
-      }
-    };
     fetchTemplate();
   }, [BASE_URL, templateId]);
 
@@ -216,7 +216,7 @@ export default function EditTemplate() {
               <Form.Group controlId="selectedTags">
                 <Form.Label>Selected Tags:</Form.Label>
                 <p>
-                  {formData.tags?.map((tag) => tag.tagName).join(', ')}
+                  {formData.tags?.map((tag) => tag.label).join(', ')}
                 </p>{' '}
                 {/* Replace with tag names if available */}
               </Form.Group>
@@ -227,8 +227,9 @@ export default function EditTemplate() {
           <Col>
             <Form.Group controlId="tags">
               <Form.Label>Tags</Form.Label>
-              <TagAutoComplete
-                onTagsChange={(tags) => setFormData({ ...formData, tags })}
+              <EditTag
+                onTagsChange={(tags) => setFormData({ ...formData, tags: uniqueTags })}
+                initialTags={ formData.tags}
               />
             </Form.Group>
           </Col>

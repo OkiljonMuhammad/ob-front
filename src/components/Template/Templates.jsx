@@ -48,20 +48,18 @@ export default function Templates() {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
-      setTopics(response.data.topics); // Extract topics from the response
+      setTopics(response.data.topics); 
     } catch (error) {
       console.error('Error fetching topics:', error);
       toast.error('Failed to load topics. Please try again.');
     }
   };
 
-  // Initial fetch when the component mounts
   useEffect(() => {
     fetchTemplates(pagination.page, 10, selectedTopic, searchQuery);
     fetchTopics();
   }, [pagination.page, searchQuery, selectedTopic]);
 
-  // Debounced fetch function
   const debouncedFetchTemplates = useCallback(
     debounce((query, topic) => {
       fetchTemplates(1, 10, topic, query);
@@ -69,7 +67,6 @@ export default function Templates() {
     []
   );
 
-  // Handle page change
   const handlePageChange = (newPage) => {
     fetchTemplates(newPage, 10, selectedTopic, searchQuery);
   };
@@ -80,17 +77,15 @@ export default function Templates() {
     debouncedFetchTemplates(value, selectedTopic);
   };
   
-  // Handle topic filter change
   const handleTopicChange = (e) => {
-    setSelectedTopic(e.target.value); // Update selectedTopic state
-    fetchTemplates(1, 10, e.target.value, searchQuery); // Reset to page 1 and fetch with new topic
+    setSelectedTopic(e.target.value); 
+    fetchTemplates(1, 10, e.target.value, searchQuery); 
   };
 
   return (
     <>
       <Row className="mb-3">
         <Col>
-          {/* Button to navigate to CreateTemplate */}
           <Button
             variant="primary"
             onClick={() => navigate('/templates/create')}
@@ -99,7 +94,6 @@ export default function Templates() {
           </Button>
         </Col>
         <Col>
-          {/* Search Input */}
           <Form.Control
             type="text"
             placeholder="Search templates..."
@@ -119,20 +113,16 @@ export default function Templates() {
         </Col>
       </Row>
 
-      {/* Loading State */}
       {loading ? (
         <p>Loading templates...</p>
       ) : (
         <>
-          {/* Table to display templates */}
           <Table striped bordered hover responsive>
             <thead>
               <tr>
                 <th>Title</th>
                 <th>Date</th>
                 <th>Topic</th>
-                <th>Users</th>
-                {/* <th>Likes</th> */}
                 <th>Actions</th>
               </tr>
             </thead>
@@ -142,11 +132,6 @@ export default function Templates() {
                   <td>{template.title}</td>
                   <td>{new Date(template.createdAt).toLocaleDateString()}</td>
                   <td>{template.Topic?.topicName || 'No Topic'}</td>
-                  <td>{template.User?.username || 'No User'}</td>
-                  {/* <td>
-                    {' '}
-                    <LikeTemplate templateId={template.id} />
-                  </td> */}
                   <td>
                   <Button
                       variant="info"
