@@ -98,7 +98,7 @@ const LikeTemplate = ({ templateId }) => {
         )}
       </button>
       <p>{likeCount}</p>
-      {error && <p className="text-danger">{error}</p>}
+      {error && <p className="text-danger text-center">{error}</p>}
     </div>
   );
 };

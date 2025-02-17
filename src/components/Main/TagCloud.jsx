@@ -25,7 +25,9 @@ const TagCloud = ({ onTagSelect, selectedTagId }) => {
   return (
     <div >
       <Container className="d-flex justify-content-center">
-      {tags.map((tag) => (
+      {tags.length === 0 ? (
+        <p className="display-6">No tags available</p>
+      ) : (tags.map((tag) => (
         <Badge
           className='me-2 mb-2'  
           key={tag.id}
@@ -35,8 +37,7 @@ const TagCloud = ({ onTagSelect, selectedTagId }) => {
         >
           {tag.tagName}
         </Badge>
-      ))}
-      <p>{selectedTagId}</p>
+      )))}
       </Container>
     </div>
   );

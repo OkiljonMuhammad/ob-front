@@ -13,19 +13,19 @@ export default function MainPage() {
     }
   };
   return (
-    <Container fluid className="py-4">
+    <Container fluid className="py-4  text-center">
       {/* Page Header */}
-      <h1 className="mb-4">Form Templates</h1>
+      <h1 className="mb-5">Form Templates</h1>
 
        {/* Tag Cloud Section */}
        <section>
-        <h2>Explore by Tags</h2>
+        <h2 className="mb-3">Explore by Tags</h2>
         <TagCloud onTagSelect={handleTagSelect} selectedTagId={selectedTagId}/>
       </section>
       
 
       {/* Recent Templates Section */}
-      <section className="mb-5">
+      <section className="mb-2 mt-5">
         <h2>Newest Form Templates</h2>
         <TemplateGallery selectedTagId={selectedTagId}/>
       </section>

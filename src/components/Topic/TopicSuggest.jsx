@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Dropdown, Badge, Card, Row, Col } from 'react-bootstrap';
 import axios from 'axios';
-import { toast } from 'react-toastify';
 
 const TopicSuggest = ({ onTopicSelect }) => {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -19,7 +18,6 @@ const TopicSuggest = ({ onTopicSelect }) => {
       setTopics(response.data.topics); // Extract topics from the response
     } catch (error) {
       console.error('Error fetching topics:', error);
-      toast.error('Failed to load topics. Please try again.');
     }
   };
 

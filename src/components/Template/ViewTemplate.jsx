@@ -1,16 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Button, Row, Col, Container, Alert } from 'react-bootstrap';
-import { useLocation, useNavigate, useParams } from 'react-router-dom';
+import { Button, Modal, Row, Col, Alert } from 'react-bootstrap';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import LikeTemplate from './LikeTemplate';
 
-export default function ViewTemplate() {
+export default function ViewTemplate({ showModal, onClose, templateId }) {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
-  const navigate = useNavigate();
-  const { templateId } = useParams();
-  const location = useLocation();
-  const { apiUrl, goBackRoute } = location.state || {};
 
   // State variables
   const [templateData, setTemplateData] = useState({
@@ -29,12 +24,11 @@ export default function ViewTemplate() {
   // Fetch template data
   const fetchTemplate = async () => {
     try {
-      const response = await axios.get(`${BASE_URL}/${apiUrl}/${templateId}`, {
+      const response = await axios.get(`${BASE_URL}/api/template/${templateId}`, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}` || '',
         },
       });
-
       const fetchedTemplateData = response.data.template;
 
       // Update template data state
@@ -53,7 +47,6 @@ export default function ViewTemplate() {
 
       // Update question data state
       setQuestionData(fetchedTemplateData.questions || []);
-
       setLoading(false);
     } catch (error) {
       console.error('Error fetching template:', error);
@@ -64,110 +57,115 @@ export default function ViewTemplate() {
 
   // Fetch template data on component mount
   useEffect(() => {
-    fetchTemplate();
-  }, [BASE_URL, templateId]);
+    if (showModal && templateId) {
+      fetchTemplate();
+    }
+  }, [showModal, templateId]);
 
   // Loading state
   if (loading) {
-    return <p>Loading template data...</p>;
+    return (
+      <Modal show={showModal} onHide={onClose} centered>
+        <Modal.Body>Loading template data...</Modal.Body>
+      </Modal>
+    );
   }
 
   // Error state
   if (error) {
     return (
-      <Alert variant="danger">
-        <p>{error}</p>
-        <Button variant="warning" onClick={() => navigate(goBackRoute)}>
-          Go Back
-        </Button>
-      </Alert>
+      <Modal show={showModal} onHide={onClose} centered className='text-center'>
+        <Modal.Body>
+          <Alert variant="danger">
+            <p>{error}</p>
+            <Button variant="warning" onClick={onClose}>
+              Close
+            </Button>
+          </Alert>
+        </Modal.Body>
+      </Modal>
     );
   }
 
   return (
-    <Container fluid className="py-4">
-      {/* Title */}
-      <Row>
-        <Col>
-          <h2>Title:</h2>
-          <h3>{templateData.title}</h3>
-        </Col>
-      </Row>
+    <Modal show={showModal} onHide={onClose} size="lg" centered className='text-center'>
+      <Modal.Header closeButton>
+        <Modal.Title className='w-100'>Template Details</Modal.Title>
+      </Modal.Header>
+      <Modal.Body>
+        {/* Title */}
+        <Row className="mb-3">
+          <Col>
+            <h5>Title:</h5>
+            <p>{templateData.title}</p>
+          </Col>
+        </Row>
 
-      {/* Description */}
-      <Row>
-        <Col>
-          <h2>Description:</h2>
-          <ReactMarkdown>{templateData.description.length > 0 ? 
-          templateData.description : 'No description'}</ReactMarkdown>
-        </Col>
-      </Row>
+        {/* Description */}
+        <Row className="mb-3">
+          <Col>
+            <h5>Description:</h5>
+            <ReactMarkdown>
+              {templateData.description.length > 0 ? templateData.description : 'No description'}
+            </ReactMarkdown>
+          </Col>
+        </Row>
 
-      {/* Topic */}
-      <Row>
-        <Col>
-          <h2>Topic:</h2>
-          <h3>{templateData.topicName}</h3>
-        </Col>
-      </Row>
+        {/* Topic */}
+        <Row className="mb-3">
+          <Col>
+            <h5>Topic:</h5>
+            <p>{templateData.topicName}</p>
+          </Col>
+        </Row>
 
-      {/* Image */}
-      <Row>
-        <Col>
-          <h2>Image:</h2>
-          {/* <img src={templateData.image} alt="Template" style={{ maxWidth: '100%' }} /> */}
-        </Col>
-      </Row>
+        {/* Visibility */}
+        <Row className="mb-3">
+          <Col>
+            <h5>Visibility:</h5>
+            <p>{templateData.isPublic ? 'Public' : 'Private'}</p>
+          </Col>
+        </Row>
 
-      {/* Visibility */}
-      <Row>
-        <Col>
-          <h2>Visibility:</h2>
-          <h3>{templateData.isPublic ? 'Public' : 'Private'}</h3>
-        </Col>
-      </Row>
+        {/* Tags */}
+        <Row className="mb-3">
+          <Col>
+            <h5>Tags:</h5>
+            <p>
+              {templateData.tags.length > 0
+                ? templateData.tags.map((tag) => tag.tagName).join(', ')
+                : 'No Tags'}
+            </p>
+          </Col>
+        </Row>
 
-      {/* Tags */}
-      <Row>
+        {/* Questions */}
+        <Row className="mb-3">
+          <Col>
+            <h5>Questions:</h5>
+            {questionData.length > 0 ? (
+              <ul>
+                {questionData.map((question, index) => (
+                  <li key={question.id}>
+                    <strong>{index + 1}. {question.text}</strong> ({question.type})
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p>No questions available.</p>
+            )}
+          </Col>
+        </Row>
         <Col>
-          <h2>Tags:</h2>
-          <h3>
-            {templateData.tags.length > 0
-              ? templateData.tags.map((tag) => tag.tagName).join(', ')
-              : 'No Tags'}
-          </h3>
-        </Col>
-      </Row>
-
-      {/* Questions */}
-      <Row>
-        <Col>
-          <h2>Questions:</h2>
-          {questionData.length > 0 ? (
-            <ul>
-              {questionData.map((question, index) => (
-                <li key={question.id}>
-                  <strong>{index + 1}. {question.text}</strong> ({question.type})
-                </li>
-              ))}
-            </ul>
-          ) : (
-            <p>No questions available.</p>
-          )}
-        </Col>
-      </Row>
-
-      {/* Close Button */}
-      <Row>
-        <Col>
-          <Button variant="warning" onClick={() => navigate(goBackRoute)}>
-            Close
-          </Button>
-        </Col>
-        <Col>
+        <h5>Likes:</h5>
         <LikeTemplate templateId={templateId} />
         </Col>
-      </Row>
-    </Container>
+      </Modal.Body>
+      <Modal.Footer>
+        <Button variant="secondary" onClick={onClose}>
+          Close
+        </Button>
+      </Modal.Footer>
+    </Modal>
   );
 }

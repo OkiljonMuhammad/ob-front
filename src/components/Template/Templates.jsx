@@ -1,10 +1,10 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Table, Button, Row, Col, Pagination, Form } from 'react-bootstrap';
+import { Table, Button, Row, Col, Pagination, Form, InputGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { debounce } from 'lodash';
-import { toast } from 'react-toastify';
-
+import DeleteTemplate from './DeleteTemplate';
+import ViewTemplate from './ViewTemplate';
 export default function Templates() {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [templates, setTemplates] = useState([]);
@@ -18,8 +18,34 @@ export default function Templates() {
     prevPage: null,
     nextPage: null,
   });
+  
   const [loading, setLoading] = useState(true);
   const navigate = useNavigate();
+  const [showDeleteModal, setShowDeleteModal] = useState(false); // Controls modal visibility
+  const [showViewModal, setShowViewModal] = useState(false); // Controls modal visibility
+  const [selectedTemplateId, setSelectedTemplateId] = useState(null); // Stores the ID of the template to delete
+
+  const handleTemplateDeleted = (deletedTemplateId) => {
+    setTemplates((prevTemplates) =>
+      prevTemplates.filter((template) => template.id !== deletedTemplateId)
+    );
+  };
+  // Function to open the modal and set the template ID
+  const handleDeleteClick = (templateId) => {
+    setSelectedTemplateId(templateId);
+    setShowDeleteModal(true);
+  };
+
+  const handleViewClick = (templateId) => {
+    setSelectedTemplateId(templateId);
+    setShowViewModal(true);
+  };
+  // Function to close the modal
+  const handleCloseModal = () => {
+    setShowDeleteModal(false);
+    setShowViewModal(false);
+    setSelectedTemplateId(null); // Reset the selected template ID
+  };
 
   // Fetch templates from the API
   const fetchTemplates = async (page = 1, limit = 10, topic = '', search = '') => {
@@ -44,7 +70,6 @@ export default function Templates() {
       }
     } catch (error) {
       console.error('Error fetching templates:', error);
-      toast.error('Failed to load templates.');
     } finally {
       setLoading(false);
     }
@@ -60,7 +85,6 @@ export default function Templates() {
       setTopics(response.data.topics || []);
     } catch (error) {
       console.error('Error fetching topics:', error);
-      toast.error('Failed to load topics.');
     }
   };
 
@@ -87,6 +111,10 @@ export default function Templates() {
     setSearchQuery(e.target.value);
   };
 
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    debouncedFetchTemplates('', selectedTopic);
+  };
   const handleTopicChange = (e) => {
     const value = e.target.value;
     setSelectedTopic(value);
@@ -100,31 +128,51 @@ export default function Templates() {
             Create Template
           </Button>
         </Col>
-        <Col>
-          <Form.Control
-            type="text"
-            placeholder="Search templates..."
-            value={searchQuery}
-            onChange={handleSearchChange}
-          />
+        <Col xs="auto">
+        <Form.Group controlId="searchInput">
+            <Form.Label>Search Templates</Form.Label>
+            <InputGroup>
+              <Form.Control
+                type="text"
+                placeholder="Enter template title..."
+                value={searchQuery}
+                onChange={handleSearchChange}
+                />
+                {searchQuery && (
+                  <InputGroup.Text style={{ cursor: 'pointer' }} onClick={handleClearSearch}>
+                  <i className="bi bi-x-lg"></i>
+                  </InputGroup.Text>
+                )}
+              </InputGroup>
+          </Form.Group>
         </Col>
-        <Col>
-          <Form.Select value={selectedTopic} onChange={handleTopicChange}>
-            <option value="">All Topics</option>
-            {topics.map((topic) => (
-              <option key={topic.id} value={topic.topicName}>
-                {topic.topicName}
-              </option>
-            ))}
-          </Form.Select>
+        <Col xs="auto">
+          <Form.Group controlId="topicFilter">
+            <Form.Label>Filter by Topic</Form.Label>
+            <Form.Select value={selectedTopic} onChange={handleTopicChange}>
+              <option value="">{topics.length === 0 ? "No topic" : "All Topics"}</option>
+              {topics.map((topic) => (
+                <option key={topic.id} value={topic.topicName}>
+                  {topic.topicName}
+                </option>
+              ))}
+            </Form.Select>
+          </Form.Group>
         </Col>
       </Row>
 
       {loading ? (
-        <p>Loading templates...</p>
-      ) : (
+         <div className="d-flex justify-content-center text-center">
+         <div>
+           <div className="spinner-border"></div>
+           <p>Loading templates...</p>
+         </div>
+       </div>
+      ) : templates.length === 0 ? (
+      <p className="display-5 text-center">No Templates</p>
+      ) :(
         <>
-          <Table striped bordered hover responsive>
+          <Table striped bordered hover responsive className="text-center">
             <thead>
               <tr>
                 <th>Title</th>
@@ -144,11 +192,7 @@ export default function Templates() {
                       variant="info"
                       size="sm"
                       className="me-2"
-                      onClick={() =>
-                        navigate(`/templates/view/${template.id}`, {
-                          state: { apiUrl: 'api/template', goBackRoute: '/dashboard' },
-                        })
-                      }
+                      onClick={() => handleViewClick(template.id)}
                     >
                       View
                     </Button>
@@ -163,7 +207,7 @@ export default function Templates() {
                     <Button
                       variant="danger"
                       size="sm"
-                      onClick={() => navigate(`/templates/delete/${template.id}`)}
+                      onClick={() => handleDeleteClick(template.id)}
                     >
                       Delete
                     </Button>
@@ -172,6 +216,7 @@ export default function Templates() {
               ))}
             </tbody>
           </Table>
+          <div className="d-flex justify-content-center">
 
           <Pagination>
             {pagination.prevPage && (
@@ -190,7 +235,24 @@ export default function Templates() {
               <Pagination.Next onClick={() => handlePageChange(pagination.page + 1)} />
             )}
           </Pagination>
+          </div>
         </>
+      )}
+       {/* Conditionally render the DeleteTemplate modal */}
+       {showDeleteModal && (
+        <DeleteTemplate
+          templateId={selectedTemplateId} // Pass the selected template ID
+          showModal={showDeleteModal} // Pass the modal visibility state
+          onClose={handleCloseModal} // Pass the function to close the modal
+          onTemplateDeleted={handleTemplateDeleted}
+        />
+      )}
+      {showViewModal && (
+        <ViewTemplate
+          showModal={showViewModal}
+          onClose={handleCloseModal}
+          templateId={selectedTemplateId}
+        />
       )}
     </>
   );

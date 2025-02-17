@@ -16,8 +16,6 @@ import Templates from './components/Template/Templates';
 import CreateTemplate from './components/Template/CreateTemplate';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import EditTemplate from './components/Template/EditTemplate';
-import DeleteTemplate from './components/Template/deleteTemplate';
-import ViewTemplate from './components/Template/ViewTemplate';
 function App() {
   return (
     <I18nextProvider i18n={i18n}>
@@ -87,24 +85,6 @@ function App() {
                     <ProtectedRoute>
                       <EditTemplate />
                     </ProtectedRoute>
-                  </Layout>
-                }
-              />
-              <Route
-                path="/templates/delete/:templateId"
-                element={
-                  <Layout>
-                    <ProtectedRoute>
-                      <DeleteTemplate />
-                    </ProtectedRoute>
-                  </Layout>
-                }
-              />
-              <Route
-                path="/templates/view/:templateId"
-                element={
-                  <Layout>
-                      <ViewTemplate />
                   </Layout>
                 }
               />
