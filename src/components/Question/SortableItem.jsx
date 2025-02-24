@@ -1,44 +1,52 @@
-import React from 'react';
+import { useContext } from 'react';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { Form, Row, Col, ListGroup, Badge, Button } from 'react-bootstrap';
+import { Form, Row, Col, ListGroup, Button } from 'react-bootstrap';
+import ThemeContext from '../../context/ThemeContext';
 
 const SortableItem = ({ id, question, onChange, onDelete }) => {
+  const { theme } = useContext(ThemeContext); 
   const {
     attributes,
     listeners,
     setNodeRef,
     transform,
     transition,
-    isDragging, // Indicates if the item is being dragged
+    isDragging,
   } = useSortable({ id });
 
   const style = {
     transform: CSS.Transform.toString(transform),
     transition,
-    opacity: isDragging ? 0.5 : 1, // Reduce opacity while dragging
+    opacity: isDragging ? 0.5 : 1, 
   };
+
+  const getTextColorClass = () => (theme === 'light' ? 'text-dark' : 'text-white');
 
   return (
     <ListGroup.Item
       ref={setNodeRef}
       style={style}
       {...attributes}
-      className={isDragging ? 'dragging' : ''}
+      className={`isDragging ? 'dragging' : '' bg-${theme} ${getTextColorClass()}`}
     >
-      <Row>
-        <Col xs={8}>
+        <Row>
+        <Col>
           <Form.Group controlId={`text-${id}`}>
-            <Form.Label>Title</Form.Label>
+            <Form.Label>Question ({question.type})</Form.Label>
             <Form.Control
               type="text"
               value={question.text}
               onChange={(e) => onChange('text', e.target.value)}
-              placeholder="Enter question title"
+              placeholder="Type question"
+              className={`bg-${theme} ${getTextColorClass()}`}
             />
           </Form.Group>
         </Col>
-        <Col xs={4}>
+        </Row>
+        <Row>
+
+        <Col xs="auto" className='mt-2'>
           <Form.Group controlId={`visible-${id}`}>
             <Form.Check
               type="switch"
@@ -48,20 +56,24 @@ const SortableItem = ({ id, question, onChange, onDelete }) => {
             />
           </Form.Group>
         </Col>
-      </Row>
-      <Badge bg="info">{question.type}</Badge>
+        <Col xs="auto">
+      <div {...listeners}>
+        <Button size="sm" className='mt-2' style={{cursor: 'grab'}}>
+        Drag Question
+        </Button>
+      </div>
+        </Col>
+        <Col xs="auto">
       <Button
         variant="danger"
         size="sm"
-        className="float-end mt-2"
+        className="mt-2"
         onClick={onDelete}
       >
-        X
+      Remove
       </Button>
-      {/* Apply drag listeners to this div */}
-      <div {...listeners} style={{ cursor: 'grab', marginTop: '0.5rem' }}>
-        Drag Handle
-      </div>
+        </Col>
+      </Row>
     </ListGroup.Item>
   );
 };

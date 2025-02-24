@@ -5,4 +5,7 @@ import json from '@rollup/plugin-json';
 // https://vite.dev/config/
 export default defineConfig({
   plugins: [react(), json()],
+  server: {
+    host: true,
+  },
 });

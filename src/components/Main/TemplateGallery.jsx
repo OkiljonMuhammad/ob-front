@@ -1,10 +1,14 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { Button, Row, Col, Pagination, Form, Card, InputGroup } from 'react-bootstrap';
 import axios from 'axios';
 import { debounce } from 'lodash';
 import ViewTemplate from '../Template/ViewTemplate';
+import ThemeContainer from '../Layout/ThemeContainer';
+import ThemeContext from '../../context/ThemeContext';
+import { useTranslation } from 'react-i18next';
 
 const TemplateGallery = ({ selectedTagId: tagId }) => {
+  const { theme } = useContext(ThemeContext);
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [templates, setTemplates] = useState([]);
   const [topics, setTopics] = useState([]);
@@ -20,6 +24,7 @@ const TemplateGallery = ({ selectedTagId: tagId }) => {
   });
   const [showViewModal, setShowViewModal] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState(null);
+  const { t } = useTranslation();
 
   const handleViewClick = (templateId) => {
     setSelectedTemplateId(templateId);
@@ -99,18 +104,25 @@ const TemplateGallery = ({ selectedTagId: tagId }) => {
     fetchTemplates(newPage, 6, tagId, selectedTopic, searchQuery);
   };
 
+  const getTextColorClass = () => (theme === 'light' ? 'text-dark' : 'text-white');
+
   return (
     <>
-      <Row className="mb-3 justify-content-end">
-        <Col xs="auto">
+    <ThemeContainer>
+      <Row className="mb-3 justify-content-center text-center">
+        <Col xs={12} md={4} lg={3}>
           <Form.Group controlId="searchInput">
-            <Form.Label>Search Templates</Form.Label>
+            <Form.Label>{t('searchTemplates')}</Form.Label>
             <InputGroup>
               <Form.Control
                 type="text"
-                placeholder="Enter template title..."
+                className={`bg-${theme} ${getTextColorClass()}`}
+                placeholder={t('EnterTemplateTitle')}
                 value={searchQuery}
                 onChange={handleSearchChange}
+                style={{
+                  '--placeholder-color': theme === 'light' ? '#6c757d' : '#fff',
+                }}
               />
               {searchQuery && (
                 <InputGroup.Text style={{ cursor: 'pointer' }} onClick={handleClearSearch}>
@@ -120,11 +132,14 @@ const TemplateGallery = ({ selectedTagId: tagId }) => {
             </InputGroup>
           </Form.Group>
         </Col>
-        <Col xs="auto">
+        <Col xs={12} md={4} lg={3}>
           <Form.Group controlId="topicFilter">
-            <Form.Label>Filter by Topic</Form.Label>
-            <Form.Select value={selectedTopic} onChange={handleTopicChange}>
-              <option value="">{topics.length === 0 ? "No topic" : "All Topics"}</option>
+            <Form.Label>{t('FilterByTopic')}</Form.Label>
+            <Form.Select 
+            value={selectedTopic} 
+            onChange={handleTopicChange}
+            className={`bg-${theme} ${getTextColorClass()}`}>
+              <option value="">{topics.length === 0 ? t('noTopic') : t('allTopics') }</option>
               {topics.map((topic) => (
                 <option key={topic.id} value={topic.topicName}>
                   {topic.topicName}
@@ -137,27 +152,27 @@ const TemplateGallery = ({ selectedTagId: tagId }) => {
       {loading ? (
         <>
         <div className="spinner-border"></div>
-        <p className="text-center">Loading templates...</p>
+        <p className="text-center">{t('loadingTemplate')}</p>
         </>
       ) : templates.length === 0 ? (
-        <p className="display-5 text-center">No Templates</p>
+        <p className="display-5 text-center">{t('noTemplatesFound')}</p>
       ) : (
         <>
           <Row xs={1} md={3} className="g-4">
             {templates.map((template) => (
               <Col key={template.id}>
-                <Card>
+                <Card className={`bg-${theme} ${getTextColorClass()}`}>
                   <Card.Body>
-                    <Card.Title>Title: {template.title}</Card.Title>
-                    <Card.Text>Topic: {template.Topic?.topicName || 'No Topic'}</Card.Text>
-                    <Card.Text>Author: {template.User?.username || 'No User'}</Card.Text>
+                    <Card.Title>{t('title')}: {template.title}</Card.Title>
+                    <Card.Text>{t('topic')}: {template.Topic?.topicName || 'No Topic'}</Card.Text>
+                    <Card.Text>{t('author')}: {template.User?.username || 'No User'}</Card.Text>
                     <Button
                       variant="info"
                       size="sm"
                       className="me-2"
                       onClick={() => handleViewClick(template.id)}
                     >
-                      View Template
+                      {t('viewTemplate')}
                     </Button>
                   </Card.Body>
                 </Card>
@@ -165,26 +180,36 @@ const TemplateGallery = ({ selectedTagId: tagId }) => {
             ))}
           </Row>
           {pagination.totalPages > 0 && (
-            <div className="d-flex justify-content-center">
-              <Pagination className="mt-3">
-                {pagination.prevPage !== null && (
-                  <Pagination.Prev onClick={() => handlePageChange(pagination.page - 1)} />
-                )}
-                {[...Array(pagination.totalPages)].map((_, index) => (
-                  <Pagination.Item
-                    key={index + 1}
-                    active={index + 1 === pagination.page}
-                    onClick={() => handlePageChange(index + 1)}
-                  >
-                    {index + 1}
-                  </Pagination.Item>
-                ))}
-                {pagination.nextPage !== null && (
-                  <Pagination.Next onClick={() => handlePageChange(pagination.page + 1)} />
-                )}
-              </Pagination>
-            </div>
-          )}
+        <div className="d-flex justify-content-center">
+          <Pagination className="mt-3">
+            {pagination.prevPage !== null && (
+              <Pagination.Prev
+                onClick={() => handlePageChange(pagination.page - 1)}
+              >
+              </Pagination.Prev>
+            )}
+            {[...Array(pagination.totalPages)].map((_, index) => (
+              <Pagination.Item
+                key={index + 1}
+                active={index + 1 === pagination.page}
+                onClick={() => handlePageChange(index + 1)}
+                className={`bg-${theme} ${getTextColorClass()} ${
+                  index + 1 === pagination.page ? 'active' : ''
+                }`}
+              >
+                {index + 1}
+              </Pagination.Item>
+            ))}
+            {pagination.nextPage !== null && (
+              <Pagination.Next
+                onClick={() => handlePageChange(pagination.page + 1)}
+                className={`bg-${theme} ${getTextColorClass()}`}
+              >
+              </Pagination.Next>
+            )}
+          </Pagination>
+        </div>
+      )}
         </>
       )}
       {showViewModal && (
@@ -194,6 +219,7 @@ const TemplateGallery = ({ selectedTagId: tagId }) => {
           templateId={selectedTemplateId}
         />
       )}
+    </ThemeContainer>
     </>
   );
 };

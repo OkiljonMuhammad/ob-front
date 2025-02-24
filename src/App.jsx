@@ -16,6 +16,15 @@ import Templates from './components/Template/Templates';
 import CreateTemplate from './components/Template/CreateTemplate';
 import ProtectedRoute from './components/Auth/ProtectedRoute';
 import EditTemplate from './components/Template/EditTemplate';
+import AdminLayout from './components/Admin/Layout/AdminLayout';
+import CreateUser from './components/Admin/Users/CreateUser';
+import EditUser from './components/Admin/Users/EditUser';
+import SubmitForm from './components/Form/SubmitForm';
+import AdminRoute from './components/Auth/AdminRoute';
+import EditForm from './components/Form/EditForm';
+import Answers from './components/Answer/Answers';
+import './App.css';
+
 function App() {
   return (
     <I18nextProvider i18n={i18n}>
@@ -59,6 +68,36 @@ function App() {
                 }
               />
               <Route
+                path="/admin"
+                element={
+                  <Layout>
+                    <AdminRoute>
+                      <AdminLayout />
+                    </AdminRoute>
+                  </Layout>
+                }
+              />
+               <Route
+                path="/admin/user/create"
+                element={
+                  <Layout>
+                    <AdminRoute>
+                      <CreateUser />
+                    </AdminRoute>
+                  </Layout>
+                }
+              />
+              <Route
+                path="/admin/user/edit/:userId"
+                element={
+                  <Layout>
+                    <AdminRoute>
+                      <EditUser />
+                    </AdminRoute>
+                  </Layout>
+                }
+              />
+              <Route
                 path="/templates"
                 element={
                   <Layout>
@@ -84,6 +123,36 @@ function App() {
                   <Layout>
                     <ProtectedRoute>
                       <EditTemplate />
+                    </ProtectedRoute>
+                  </Layout>
+                }
+              />
+               <Route
+                path="/form/submit/:encryptedData"
+                element={
+                  <Layout>
+                    <ProtectedRoute>
+                      <SubmitForm />
+                    </ProtectedRoute>
+                  </Layout>
+                }
+              />
+              <Route
+                path="/form/edit/:templateId"
+                element={
+                  <Layout>
+                    <ProtectedRoute>
+                      <EditForm />
+                    </ProtectedRoute>
+                  </Layout>
+                }
+              />
+              <Route
+                path="/answers/:formId/:formName"
+                element={
+                  <Layout>
+                    <ProtectedRoute>
+                      <Answers />
                     </ProtectedRoute>
                   </Layout>
                 }

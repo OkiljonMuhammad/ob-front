@@ -1,18 +1,25 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Form, Button, Row, Col, Container, Alert } from 'react-bootstrap';
 import { useNavigate, useParams } from 'react-router-dom';
+import UpdateQuestion from '../Question/UpdateQuestion';
 import EditTag from '../Tag/EditTag';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import ReactMarkdown from 'react-markdown';
 import EditTopic from '../Topic/EditTopic';
+import ThemeContext from '../../context/ThemeContext';
+import AddQuestion from '../Question/AddQuestion';
 
 export default function EditTemplate() {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const navigate = useNavigate();
+  const { theme } = useContext(ThemeContext); 
+
   const { templateId } = useParams();
 
   const [showPreview, setShowPreview] = useState(false);
+  const [questions, setQuestions] = useState([]);
+  const [templateIsUpdated, setTemplateIsUpdated] = useState(false);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -36,6 +43,13 @@ export default function EditTemplate() {
         }
       );
       const templateData = response.data.template;
+
+    const questionsResponse = await axios.get(
+      `${BASE_URL}/api/question/questions/${templateId}`,
+      {
+        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
+      }
+    );
       setFormData({
         title: templateData.title || '',
         description: templateData.description || '',
@@ -44,11 +58,12 @@ export default function EditTemplate() {
         image: templateData.image || '',
         isPublic: templateData.isPublic || false,
         tags:
-          templateData.Tags?.map((tag) => ({
+            templateData.Tags?.map((tag) => ({
             value: tag.id,
             label: tag.tagName,
           })) || [],
       });
+      setQuestions(questionsResponse.data.questions || []);
       setLoading(false);
     } catch (error) {
       console.error('Error fetching template:', error);
@@ -73,12 +88,22 @@ export default function EditTemplate() {
       return;
     }
     try {
-      await axios.put(`${BASE_URL}/api/template/${templateId}`, formData, {
+      const updatedTags = formData.tags.map(tag => ({
+        id: tag.value,
+        tagName: tag.label,
+      }));
+  
+      const updatedFormData = {
+        ...formData,
+        tags: updatedTags,
+      };
+  
+  
+      await axios.put(`${BASE_URL}/api/template/${templateId}`, updatedFormData, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
-      console.log(formData);
       toast.success('Template updated successfully!');
-      navigate('/dashboard');
+      setTemplateIsUpdated(true);
     } catch (error) {
       console.error('Error updating template:', error);
       toast.error('Failed to update template. Please try again.');
@@ -93,10 +118,72 @@ export default function EditTemplate() {
     return <p>Loading template data...</p>;
   }
 
+  const handleUpdateQuestions = async (templateId, updatedQuestions) => {
+    if (!templateId) {
+      setError('Template ID is missing. Please create a template first.');
+      return;
+    }
+
+    if (!updatedQuestions || !Array.isArray(updatedQuestions) || updatedQuestions.length === 0) {
+      setError('No questions to update.');
+      return;
+    }
+
+    try {
+      await axios.put(
+        `${BASE_URL}/api/question/questions/${templateId}`,
+       { questions: updatedQuestions },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        }
+      );
+      toast.success('Questions updated successfully!');
+      navigate('/dashboard');
+      setError(null);
+    } catch (error) {
+      console.error('Error updating questions:', error);
+      setError('Failed to update questions. Please try again.');
+      toast.error('Failed to update questions. Please try again.');
+    }
+  };
+
+  const handleSaveQuestions = async (templateId, questions) => {
+    if (!templateId) {
+      setError('Template ID is missing. Please create a template first.');
+      return;
+    }
+    try {
+      await axios.post(
+        `${BASE_URL}/api/question/${templateId}`,
+        { questions },
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            Authorization: `Bearer ${localStorage.getItem('token')}`,
+          },
+        }
+      );
+      toast.success('Questions saved successfully!');
+      navigate('/dashboard');
+      setError(null);
+    } catch (error) {
+      console.error('Error saving questions:', error);
+      setError('Failed to save questions. Please try again.');
+      toast.error('Failed to save questions. Please try again.');
+    }
+  };
+
+  const getTextColorClass = () => (theme === 'light' ? 'text-dark' : 'text-white');
+
+
   return (
     <Container fluid className="py-4">
       {error && <Alert variant="danger">{error}</Alert>}
-      <Form onSubmit={handleSubmit}>
+      { !templateIsUpdated && (
+        <Form onSubmit={handleSubmit}>
         <h2>Edit Template</h2>
         <Row className="mb-4">
           <Col>
@@ -106,6 +193,7 @@ export default function EditTemplate() {
                 type="text"
                 name="title"
                 value={formData.title}
+                className={`bg-${theme} ${getTextColorClass()}`}
                 onChange={(e) =>
                   setFormData({ ...formData, title: e.target.value })
                 }
@@ -123,10 +211,10 @@ export default function EditTemplate() {
                 rows={6}
                 name="description"
                 value={formData.description}
+                className={`bg-${theme} ${getTextColorClass()}`}
                 onChange={(e) =>
                   setFormData({ ...formData, description: e.target.value })
                 }
-                placeholder="Use Markdown syntax for formatting (e.g., **bold**, *italic*, - list)"
               />
             </Form.Group>
           </Col>
@@ -150,16 +238,6 @@ export default function EditTemplate() {
             )}
           </Col>
         </Row>
-        {formData.topicName && (
-          <Row className="mb-4">
-            <Col>
-              <Form.Group controlId="topicName">
-                <Form.Label>Selected Topic:</Form.Label>
-                <p>{formData.topicName}</p>
-              </Form.Group>
-            </Col>
-          </Row>
-        )}
         <Row className="mb-4">
           <Col>
             <Form.Group controlId="topicId">
@@ -169,13 +247,13 @@ export default function EditTemplate() {
                   setFormData((prevData) => ({
                     ...prevData,
                     topicId: topic.id,
-                    topicName: topic.name,
+                    topicName: topic.topicName,
                   }))
                 }
-                initialSelectedTopics={
+                initialSelectedTopic={
                   formData.topicId && formData.topicName
-                    ? [{ id: formData.topicId, name: formData.topicName }]
-                    : []
+                    ? { id: formData.topicId, topicName: formData.topicName }
+                    : null
                 }
               />
             </Form.Group>
@@ -216,9 +294,7 @@ export default function EditTemplate() {
             <Col>
               <Form.Group controlId="selectedTags">
                 <Form.Label>Selected Tags:</Form.Label>
-                <p>
-                  {formData.tags?.map((tag) => tag.label).join(', ')}
-                </p>{' '}
+                <p>{formData.tags?.map((tag) => tag.label).join(', ')}</p>{' '}
                 {/* Replace with tag names if available */}
               </Form.Group>
             </Col>
@@ -230,9 +306,9 @@ export default function EditTemplate() {
               <Form.Label>Tags</Form.Label>
               <EditTag
                 onTagsChange={(tags) => {
-                  
-                  setFormData({ ...formData, tags })}}
-                initialTags={ formData.tags}
+                  setFormData({ ...formData, tags });
+                }}
+                initialTags={formData.tags}
               />
             </Form.Group>
           </Col>
@@ -248,6 +324,31 @@ export default function EditTemplate() {
           Update Template
         </Button>
       </Form>
+      )}
+        {templateIsUpdated && questions.length > 0 && (
+        <div className='mt-3'>
+          <AddQuestion
+            templateId={templateId}
+            onSaveQuestions={handleSaveQuestions}
+          />
+          <UpdateQuestion
+            templateId={templateId}
+            onSaveQuestions={handleUpdateQuestions}
+          />
+        </div>
+        
+      )}
+     {templateIsUpdated && questions.length == 0 && (
+        <div className='mt-3'>
+          <Alert variant="success" className='text-center'>
+            There is no questions. You can now create.
+          </Alert>
+          <AddQuestion
+            templateId={templateId}
+            onSaveQuestions={handleSaveQuestions}
+          />
+        </div>
+      )}
     </Container>
   );
 }

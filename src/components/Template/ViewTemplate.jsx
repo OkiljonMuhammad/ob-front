@@ -1,13 +1,16 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Button, Modal, Row, Col, Alert } from 'react-bootstrap';
+import AuthContext from '../../context/AuthContext';
 import axios from 'axios';
 import ReactMarkdown from 'react-markdown';
 import LikeTemplate from './LikeTemplate';
+import ThemeContext from '../../context/ThemeContext';
 
 export default function ViewTemplate({ showModal, onClose, templateId }) {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  const { isAuthenticated } = useContext(AuthContext);
+  const { theme } = useContext(ThemeContext);
 
-  // State variables
   const [templateData, setTemplateData] = useState({
     title: '',
     description: '',
@@ -21,17 +24,18 @@ export default function ViewTemplate({ showModal, onClose, templateId }) {
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
 
-  // Fetch template data
   const fetchTemplate = async () => {
     try {
-      const response = await axios.get(`${BASE_URL}/api/template/${templateId}`, {
+      const url = isAuthenticated
+        ? `${BASE_URL}/api/template/${templateId}`
+        : `${BASE_URL}/api/template/public/${templateId}`;
+      const response = await axios.get(url, {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}` || '',
         },
       });
       const fetchedTemplateData = response.data.template;
 
-      // Update template data state
       setTemplateData({
         title: fetchedTemplateData.title || 'No Title',
         description: fetchedTemplateData.description || 'No Description',
@@ -45,7 +49,6 @@ export default function ViewTemplate({ showModal, onClose, templateId }) {
         })) || [],
       });
 
-      // Update question data state
       setQuestionData(fetchedTemplateData.questions || []);
       setLoading(false);
     } catch (error) {
@@ -55,27 +58,40 @@ export default function ViewTemplate({ showModal, onClose, templateId }) {
     }
   };
 
-  // Fetch template data on component mount
   useEffect(() => {
     if (showModal && templateId) {
       fetchTemplate();
     }
   }, [showModal, templateId]);
 
-  // Loading state
+  const getTextColorClass = () => (theme === 'light' ? 'text-dark' : 'text-white');
+
   if (loading) {
     return (
-      <Modal show={showModal} onHide={onClose} centered>
-        <Modal.Body>Loading template data...</Modal.Body>
+      <Modal
+        show={showModal}
+        onHide={onClose}
+        centered
+        dialogClassName={`modal-dialog bg-${theme}`}
+        className={`${getTextColorClass()} text-center`}
+      >
+        <Modal.Body className={`p-3 bg-${theme} ${getTextColorClass()}`}>
+          Loading template data...
+        </Modal.Body>
       </Modal>
     );
   }
 
-  // Error state
   if (error) {
     return (
-      <Modal show={showModal} onHide={onClose} centered className='text-center'>
-        <Modal.Body>
+      <Modal
+        show={showModal}
+        onHide={onClose}
+        centered
+        dialogClassName={`modal-dialog bg-${theme}`}
+        className={`${getTextColorClass()} text-center`}
+      >
+        <Modal.Body className={`p-3 bg-${theme} ${getTextColorClass()}`}>
           <Alert variant="danger">
             <p>{error}</p>
             <Button variant="warning" onClick={onClose}>
@@ -88,20 +104,24 @@ export default function ViewTemplate({ showModal, onClose, templateId }) {
   }
 
   return (
-    <Modal show={showModal} onHide={onClose} size="lg" centered className='text-center'>
-      <Modal.Header closeButton>
-        <Modal.Title className='w-100'>Template Details</Modal.Title>
+    <Modal
+      show={showModal}
+      onHide={onClose}
+      size="lg"
+      centered
+      dialogClassName={`modal-dialog bg-${theme}`}
+      className={`${getTextColorClass()} text-center`}
+    >
+      <Modal.Header closeButton className={`bg-${theme} ${getTextColorClass()}`}>
+        <Modal.Title className="w-100">Template Details</Modal.Title>
       </Modal.Header>
-      <Modal.Body>
-        {/* Title */}
+      <Modal.Body className={`p-3 bg-${theme} ${getTextColorClass()}`}>
         <Row className="mb-3">
           <Col>
             <h5>Title:</h5>
             <p>{templateData.title}</p>
           </Col>
         </Row>
-
-        {/* Description */}
         <Row className="mb-3">
           <Col>
             <h5>Description:</h5>
@@ -110,24 +130,18 @@ export default function ViewTemplate({ showModal, onClose, templateId }) {
             </ReactMarkdown>
           </Col>
         </Row>
-
-        {/* Topic */}
         <Row className="mb-3">
           <Col>
             <h5>Topic:</h5>
             <p>{templateData.topicName}</p>
           </Col>
         </Row>
-
-        {/* Visibility */}
         <Row className="mb-3">
           <Col>
             <h5>Visibility:</h5>
             <p>{templateData.isPublic ? 'Public' : 'Private'}</p>
           </Col>
         </Row>
-
-        {/* Tags */}
         <Row className="mb-3">
           <Col>
             <h5>Tags:</h5>
@@ -138,13 +152,11 @@ export default function ViewTemplate({ showModal, onClose, templateId }) {
             </p>
           </Col>
         </Row>
-
-        {/* Questions */}
         <Row className="mb-3">
           <Col>
             <h5>Questions:</h5>
             {questionData.length > 0 ? (
-              <ul>
+              <ul className="ps-0" style={{ listStyleType: "none" }}>
                 {questionData.map((question, index) => (
                   <li key={question.id}>
                     <strong>{index + 1}. {question.text}</strong> ({question.type})
@@ -157,11 +169,11 @@ export default function ViewTemplate({ showModal, onClose, templateId }) {
           </Col>
         </Row>
         <Col>
-        <h5>Likes:</h5>
-        <LikeTemplate templateId={templateId} />
+          <h5>Likes:</h5>
+          <LikeTemplate templateId={templateId} />
         </Col>
       </Modal.Body>
-      <Modal.Footer>
+      <Modal.Footer className={`bg-${theme} ${getTextColorClass()}`}>
         <Button variant="secondary" onClick={onClose}>
           Close
         </Button>

@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
+import ThemeContext from '../../context/ThemeContext';
+
 import {
-  Form,
   Button,
   Row,
   Col,
   Card,
   ListGroup,
-  Badge,
+  Dropdown,
+  DropdownButton
 } from 'react-bootstrap';
 import {
   DndContext,
@@ -21,21 +23,26 @@ import {
   arrayMove,
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable';
-import SortableItem from './SortableItem'; // Custom component for sortable items
+import SortableItem from './SortableItem';
 import { useNavigate } from 'react-router-dom';
 
 const AddQuestion = ({ templateId, onSaveQuestions }) => {
   const navigate = useNavigate();
+  const { theme } = useContext(ThemeContext); 
   const [questions, setQuestions] = useState([]);
-  // Track question counts for each type
   const [questionCounts, setQuestionCounts] = useState({
     'single-line': 0,
     'multi-line': 0,
     integer: 0,
     checkbox: 0,
   });
+  const questionTypes = [
+    { type: 'single-line', label: 'Single-line', variant: 'primary' },
+    { type: 'multi-line', label: 'Multi-line', variant: 'secondary' },
+    { type: 'integer', label: 'Integer', variant: 'success' },
+    { type: 'checkbox', label: 'Checkbox', variant: 'warning' }
+  ];
 
-  // Handle adding a new question
   const handleAddQuestion = (type) => {
     if (questionCounts[type] >= 4) {
       return;
@@ -53,14 +60,12 @@ const AddQuestion = ({ templateId, onSaveQuestions }) => {
     }));
   };
 
-  // Handle updating a question's text
   const handleQuestionChange = (id, field, value) => {
     setQuestions((prevQuestions) =>
       prevQuestions.map((q) => (q.id === id ? { ...q, [field]: value } : q))
     );
   };
 
-  // Handle removing a question
   const handleRemoveQuestion = (id, type) => {
     setQuestions((prevQuestions) => prevQuestions.filter((q) => q.id !== id));
     setQuestionCounts((prevCounts) => ({
@@ -69,7 +74,6 @@ const AddQuestion = ({ templateId, onSaveQuestions }) => {
     }));
   };
 
-  // Handle drag-and-drop reordering
   const sensors = useSensors(
     useSensor(PointerSensor),
     useSensor(KeyboardSensor)
@@ -86,73 +90,47 @@ const AddQuestion = ({ templateId, onSaveQuestions }) => {
     }
   };
 
-  // Handle saving questions
   const handleSaveQuestions = () => {
     const payload = questions.map((q, index) => ({
       type: q.type,
       text: q.text,
       isVisibleInTable: q.isVisibleInTable,
-      order: index + 1, // Set order based on current position
+      order: index + 1,
     }));
     onSaveQuestions(templateId, payload);
   };
 
+  const getTextColorClass = () => (theme === 'light' ? 'text-dark' : 'text-white');
+
+  const availableQuestions = questionTypes.filter(q => questionCounts[q.type] < 4);
   return (
-    <Card>
+    <Card className={`bg-${theme} ${getTextColorClass()}`}>
       <Card.Body>
         <Card.Title>Add Questions</Card.Title>
-
-        {/* Buttons to add questions */}
         <Row className="mb-3">
           <Col>
-            <Button
-              variant="primary"
-              onClick={() => handleAddQuestion('single-line')}
-              disabled={questionCounts['single-line'] >= 4}
-            >
-              Add Single-line Question ({4 - questionCounts['single-line']}{' '}
-              left)
-            </Button>
-          </Col>
-          <Col>
-            <Button
-              variant="secondary"
-              onClick={() => handleAddQuestion('multi-line')}
-              disabled={questionCounts['multi-line'] >= 4}
-            >
-              Add Multi-line Question ({4 - questionCounts['multi-line']} left)
-            </Button>
-          </Col>
-        </Row>
-        <Row className="mb-3">
-          <Col>
-            <Button
-              variant="success"
-              onClick={() => handleAddQuestion('integer')}
-              disabled={questionCounts.integer >= 4}
-            >
-              Add Integer Question ({4 - questionCounts['integer']} left)
-            </Button>
-          </Col>
-          <Col>
-            <Button
-              variant="warning"
-              onClick={() => handleAddQuestion('checkbox')}
-              disabled={questionCounts.checkbox >= 4}
-            >
-              Add Checkbox Question ({4 - questionCounts['checkbox']} left)
-            </Button>
+            <DropdownButton title="Add Question" variant="info">
+              {availableQuestions.map(q => (
+                <Dropdown.Item
+                  key={q.type}
+                  onClick={() => handleAddQuestion(q.type)}
+                  disabled={questionCounts[q.type] >= 4}
+                  className={`bg-${theme} ${getTextColorClass()}`}
+                >
+                  {q.label} ({4 - questionCounts[q.type]} left)
+                </Dropdown.Item>
+              ))}
+            </DropdownButton>
           </Col>
         </Row>
 
-        {/* List of questions with drag-and-drop */}
         <DndContext
           sensors={sensors}
           collisionDetection={closestCenter}
           onDragEnd={handleDragEnd}
         >
           <SortableContext
-            items={questions.map((q) => q.id)} // Ensure IDs match
+            items={questions.map((q) => q.id)}
             strategy={verticalListSortingStrategy}
           >
             <ListGroup>
@@ -172,8 +150,8 @@ const AddQuestion = ({ templateId, onSaveQuestions }) => {
             </ListGroup>
           </SortableContext>
         </DndContext>
-
-        {/* Save button */}
+        <Row>
+        <Col xs="auto">
         <Button
           variant="warning"
           className="me-2 mt-3"
@@ -181,6 +159,8 @@ const AddQuestion = ({ templateId, onSaveQuestions }) => {
         >
           Cancel
         </Button>
+        </Col>
+        <Col xs="auto">
         <Button
           variant="success"
           className="mt-3"
@@ -188,6 +168,8 @@ const AddQuestion = ({ templateId, onSaveQuestions }) => {
         >
           Save Questions
         </Button>
+        </Col>
+        </Row>
       </Card.Body>
     </Card>
   );

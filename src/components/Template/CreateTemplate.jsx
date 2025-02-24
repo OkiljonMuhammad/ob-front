@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useContext, useState } from 'react';
 import { Form, Button, Row, Col, Container, Alert } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import TagAutoComplete from '../Tag/TagAutoComplete';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import ReactMarkdown from 'react-markdown';
-import TopicSuggest from '../Topic/TopicSuggest'; // Import the TopicSuggest component
-import AddQuestion from '../Question/AddQuestion'; // Import the AddQuestion component
+import TopicSuggest from '../Topic/TopicSuggest';
+import AddQuestion from '../Question/AddQuestion';
+import UploadImage from "../Image/UploadImage";
+import ThemeContext from '../../context/ThemeContext';
 
 export default function CreateTemplate() {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -15,15 +17,15 @@ export default function CreateTemplate() {
   const [formData, setFormData] = useState({
     title: '',
     description: '',
-    topicId: '', // Default topicId is empty
+    topicId: '',
     image: '',
     isPublic: true,
     tags: [],
   });
-  const [templateId, setTemplateId] = useState(null); // Template ID after creation
-  const [error, setError] = useState(null); // Error state for question saving
+  const [templateId, setTemplateId] = useState(null);
+  const { theme } = useContext(ThemeContext); 
+  const [error, setError] = useState(null); 
 
-  // Handle form submission to create a template
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
@@ -37,7 +39,7 @@ export default function CreateTemplate() {
         }
       );
       const createdTemplateId = response.data.template.id;
-      setTemplateId(createdTemplateId); // Store the template ID
+      setTemplateId(createdTemplateId);
       toast.success('Template created successfully!');
     } catch (error) {
       console.error('Error creating template:', error);
@@ -45,7 +47,10 @@ export default function CreateTemplate() {
     }
   };
 
-  // Handle saving questions
+  const handleImageUpload = (imageUrl) => {
+    setFormData((prevData) => ({ ...prevData, image: imageUrl }));
+  };
+
   const handleSaveQuestions = async (templateId, questions) => {
     if (!templateId) {
       setError('Template ID is missing. Please create a template first.');
@@ -64,7 +69,7 @@ export default function CreateTemplate() {
       );
       toast.success('Questions saved successfully!');
       navigate('/dashboard');
-      setError(null); // Clear any previous errors
+      setError(null);
     } catch (error) {
       console.error('Error saving questions:', error);
       setError('Failed to save questions. Please try again.');
@@ -75,6 +80,8 @@ export default function CreateTemplate() {
   const togglePreview = () => {
     setShowPreview((prevState) => !prevState);
   };
+
+  const getTextColorClass = () => (theme === 'light' ? 'text-dark' : 'text-white');
 
   return (
     <Container fluid className="py-4">
@@ -90,6 +97,7 @@ export default function CreateTemplate() {
                   type="text"
                   name="title"
                   value={formData.title}
+                  className={`bg-${theme} ${getTextColorClass()}`}
                   onChange={(e) =>
                     setFormData({ ...formData, title: e.target.value })
                   }
@@ -107,10 +115,10 @@ export default function CreateTemplate() {
                   rows={6}
                   name="description"
                   value={formData.description}
+                  className={`bg-${theme} ${getTextColorClass()}`}
                   onChange={(e) =>
                     setFormData({ ...formData, description: e.target.value })
                   }
-                  placeholder="Use Markdown syntax for formatting (e.g., **bold**, *italic*, - list)"
                 />
               </Form.Group>
             </Col>
@@ -118,15 +126,14 @@ export default function CreateTemplate() {
           <Row className="mb-3">
             <Col>
               <Button
-                variant="secondary"
+                variant="primary"
                 onClick={togglePreview}
-                style={{ marginBottom: '1rem' }}
+                className='mb-3'
               >
                 {showPreview ? 'Close Preview' : 'Show Preview'}
               </Button>
               {showPreview && (
                 <div>
-                  <h5>Preview</h5>
                   <ReactMarkdown className="markdown-preview">
                     {formData.description || 'No description provided.'}
                   </ReactMarkdown>
@@ -151,17 +158,7 @@ export default function CreateTemplate() {
           </Row>
           <Row className="mb-3">
             <Col>
-              <Form.Group controlId="image">
-                <Form.Label>Image URL</Form.Label>
-                <Form.Control
-                  type="url"
-                  name="image"
-                  value={formData.image}
-                  onChange={(e) =>
-                    setFormData({ ...formData, image: e.target.value })
-                  }
-                />
-              </Form.Group>
+              <UploadImage onUpload={handleImageUpload} />
             </Col>
           </Row>
           <Row className="mb-3">
@@ -189,6 +186,8 @@ export default function CreateTemplate() {
               </Form.Group>
             </Col>
           </Row>
+          <Row>
+            <Col xs="auto">
           <Button
             variant="warning"
             className="me-2"
@@ -196,16 +195,19 @@ export default function CreateTemplate() {
           >
             Cancel
           </Button>
+            </Col>
+            <Col xs="auto">
           <Button variant="primary" type="submit">
             Create Template
           </Button>
+            </Col>
+          </Row>
         </Form>
       )}
 
-      {/* Add Questions Section */}
       {templateId && (
         <div>
-          <Alert variant="success">
+          <Alert variant="success" className='text-center'>
             Template created successfully! You can now add questions.
           </Alert>
           <AddQuestion

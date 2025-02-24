@@ -10,7 +10,9 @@ const Layout = ({ children }) => {
   return (
     <>
       <Header theme={theme} />
-      <Container className="mt-4">{children}</Container>
+      <Container className={`mt-4 bg-${theme} text-${theme === 'light' ? 'dark' : 'white'}`}>
+        {children}
+      </Container>
     </>
   );
 };

@@ -1,0 +1,82 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+.navbar-brand {
+  font-family: 'Poppins', sans-serif;
+  font-weight: 600;
+  font-size: 1.5rem;
+}
+
+
+.form-control::placeholder {
+  color: var(--placeholder-color);
+}
+
+.table-dark {
+  background-color: #343a40 !important;
+  color: white !important;
+}
+
+.table-light {
+  background-color: white !important;
+  color: black !important;
+}
+
+.theme-dark .select__control {
+  background-color: #343a40 !important;
+  color: white !important;
+  border-color: #454d55 !important;
+}
+
+.theme-dark .select__control:hover {
+  border-color: #6c757d !important;
+}
+
+.theme-dark .select__menu {
+  background-color: #343a40 !important;
+  border-color: #454d55 !important;
+}
+
+.theme-dark .select__menu-list {
+  background-color: #343a40 !important;
+}
+
+.theme-dark .select__option {
+  background-color: transparent !important;
+  color: white !important;
+}
+
+.theme-dark .select__option:hover {
+  background-color: #495057 !important;
+}
+
+.theme-dark .select__option--is-selected {
+  background-color: #007bff !important;
+  color: white !important;
+}
+
+.theme-dark .select__option--is-focused {
+  background-color: #495057 !important;
+}
+
+.theme-dark .select__multi-value {
+  background-color: #007bff !important;
+  color: white !important;
+}
+
+.theme-dark .select__multi-value__label {
+  color: white !important;
+}
+
+.theme-dark .select__multi-value__remove {
+  background-color: transparent !important;
+  color: white !important;
+}
+
+.theme-dark .select__multi-value__remove:hover {
+  background-color: #dc3545 !important;
+  color: white !important;
+}
+
+.theme-dark .select__input-container {
+  color: white !important;
+}

@@ -9,7 +9,6 @@ const LikeTemplate = ({ templateId }) => {
 
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-  // Function to check if the user has already liked the template
   const checkIfLiked = async () => {
     try {
       const response = await axios.get(`${BASE_URL}/api/like/${templateId}`, {
@@ -36,7 +35,6 @@ const LikeTemplate = ({ templateId }) => {
     }
   };
 
-  // Function to like the template
   const handleLike = async () => {
     try {
       setLoading(true);
@@ -57,7 +55,6 @@ const LikeTemplate = ({ templateId }) => {
     }
   };
 
-  // Function to remove the like
   const handleUnlike = async () => {
     try {
       setLoading(true);
@@ -77,7 +74,6 @@ const LikeTemplate = ({ templateId }) => {
     }
   };
 
-  // Check like status when the component mounts
   useEffect(() => {
     checkIfLiked();
     getLikeCount();

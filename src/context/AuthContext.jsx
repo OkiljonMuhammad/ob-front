@@ -1,5 +1,6 @@
 import { createContext, useState, useEffect } from 'react';
 import { isTokenExpired } from '../utils/authUtils';
+import { jwtDecode } from 'jwt-decode';
 
 const AuthContext = createContext();
 
@@ -39,9 +40,23 @@ export const AuthProvider = ({ children }) => {
     setIsAuthenticated(false);
   };
 
+  const isAdmin = () => {
+    const token = localStorage.getItem('token');
+    if (!token) return false;
+    
+    try {
+      const decoded = jwtDecode(token);
+      return decoded.role === 'admin';
+    } catch (error) {
+      console.error('Invalid token:', error);
+      return false;
+    }
+  };
+
+
   return (
     <AuthContext.Provider
-      value={{ isAuthenticated, login, logout, validateToken }}
+      value={{ isAuthenticated, login, logout, validateToken, isAdmin }}
     >
       {children}
     </AuthContext.Provider>

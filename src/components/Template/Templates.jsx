@@ -1,10 +1,14 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { Table, Button, Row, Col, Pagination, Form, InputGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { debounce } from 'lodash';
 import DeleteTemplate from './DeleteTemplate';
 import ViewTemplate from './ViewTemplate';
+import CreateForm from '../Form/CreateForm';
+import ViewAggregation from './ViewAggregation';
+import ThemeContext from '../../context/ThemeContext';
+
 export default function Templates() {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [templates, setTemplates] = useState([]);
@@ -20,34 +24,47 @@ export default function Templates() {
   });
   
   const [loading, setLoading] = useState(true);
+  const { theme } = useContext(ThemeContext);
   const navigate = useNavigate();
-  const [showDeleteModal, setShowDeleteModal] = useState(false); // Controls modal visibility
-  const [showViewModal, setShowViewModal] = useState(false); // Controls modal visibility
-  const [selectedTemplateId, setSelectedTemplateId] = useState(null); // Stores the ID of the template to delete
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [showViewModal, setShowViewModal] = useState(false);
+  const [showFormCreateModal, setShowFormCreateModal] = useState(false);
+  const [showAggregationModal, setShowAggregationModal] = useState(false);
+  const [selectedTemplateId, setSelectedTemplateId] = useState(null);
 
   const handleTemplateDeleted = (deletedTemplateId) => {
     setTemplates((prevTemplates) =>
       prevTemplates.filter((template) => template.id !== deletedTemplateId)
     );
   };
-  // Function to open the modal and set the template ID
+  
   const handleDeleteClick = (templateId) => {
     setSelectedTemplateId(templateId);
     setShowDeleteModal(true);
+  };
+
+  const handleFormCreateClick = (templateId) => {
+    setSelectedTemplateId(templateId);
+    setShowFormCreateModal(true);
+  };
+
+  const handleAggregationClick = (templateId) => {
+    setSelectedTemplateId(templateId);
+    setShowAggregationModal(true);
   };
 
   const handleViewClick = (templateId) => {
     setSelectedTemplateId(templateId);
     setShowViewModal(true);
   };
-  // Function to close the modal
   const handleCloseModal = () => {
     setShowDeleteModal(false);
     setShowViewModal(false);
-    setSelectedTemplateId(null); // Reset the selected template ID
+    setShowFormCreateModal(false);
+    setShowAggregationModal(false);
+    setSelectedTemplateId(null);
   };
 
-  // Fetch templates from the API
   const fetchTemplates = async (page = 1, limit = 10, topic = '', search = '') => {
     try {
       setLoading(true);
@@ -59,8 +76,8 @@ export default function Templates() {
       });
 
       if (response.data) {
-        setTemplates(response.data.templates || []);
-        setPagination(response.data.pagination || {
+        setTemplates(response.data?.templates || []);
+        setPagination(response.data?.pagination || {
           total: 0,
           page: 1,
           totalPages: 1,
@@ -82,7 +99,7 @@ export default function Templates() {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
         },
       });
-      setTopics(response.data.topics || []);
+      setTopics(response.data?.topics || []);
     } catch (error) {
       console.error('Error fetching topics:', error);
     }
@@ -119,6 +136,7 @@ export default function Templates() {
     const value = e.target.value;
     setSelectedTopic(value);
   };
+  const getTextColorClass = () => (theme === 'light' ? 'text-dark' : 'text-white');
 
   return (
     <>
@@ -137,6 +155,7 @@ export default function Templates() {
                 placeholder="Enter template title..."
                 value={searchQuery}
                 onChange={handleSearchChange}
+                className={`bg-${theme} ${getTextColorClass()}`}
                 />
                 {searchQuery && (
                   <InputGroup.Text style={{ cursor: 'pointer' }} onClick={handleClearSearch}>
@@ -149,12 +168,15 @@ export default function Templates() {
         <Col xs="auto">
           <Form.Group controlId="topicFilter">
             <Form.Label>Filter by Topic</Form.Label>
-            <Form.Select value={selectedTopic} onChange={handleTopicChange}>
+            <Form.Select 
+            value={selectedTopic} 
+            onChange={handleTopicChange} 
+            className={`bg-${theme} ${getTextColorClass()}`}>
               <option value="">{topics.length === 0 ? "No topic" : "All Topics"}</option>
               {topics.map((topic) => (
                 <option key={topic.id} value={topic.topicName}>
                   {topic.topicName}
-                </option>
+                </option>             
               ))}
             </Form.Select>
           </Form.Group>
@@ -172,9 +194,10 @@ export default function Templates() {
       <p className="display-5 text-center">No Templates</p>
       ) :(
         <>
-          <Table striped bordered hover responsive className="text-center">
-            <thead>
+          <Table striped bordered hover responsive className={`text-center table-${theme}`} >
+            <thead >
               <tr>
+                <th>#</th>
                 <th>Title</th>
                 <th>Date</th>
                 <th>Topic</th>
@@ -182,8 +205,9 @@ export default function Templates() {
               </tr>
             </thead>
             <tbody>
-              {templates.map((template) => (
+              {templates.map((template, index) => (
                 <tr key={template.id}>
+                  <td>{index + 1}</td>
                   <td>{template.title}</td>
                   <td>{new Date(template.createdAt).toLocaleDateString()}</td>
                   <td>{template.Topic?.topicName || 'No Topic'}</td>
@@ -207,17 +231,34 @@ export default function Templates() {
                     <Button
                       variant="danger"
                       size="sm"
+                      className="me-2"
                       onClick={() => handleDeleteClick(template.id)}
                     >
                       Delete
+                    </Button>
+                    <Button
+                      variant="success"
+                      size="sm"
+                      className="me-2"
+
+                      onClick={() => handleFormCreateClick(template.id)}
+                    >
+                      Create Form
+                    </Button>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      onClick={() => handleAggregationClick(template.id)}
+                    >
+                      Aggregations
                     </Button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </Table>
+          
           <div className="d-flex justify-content-center">
-
           <Pagination>
             {pagination.prevPage && (
               <Pagination.Prev onClick={() => handlePageChange(pagination.page - 1)} />
@@ -238,20 +279,33 @@ export default function Templates() {
           </div>
         </>
       )}
-       {/* Conditionally render the DeleteTemplate modal */}
        {showDeleteModal && (
         <DeleteTemplate
-          templateId={selectedTemplateId} // Pass the selected template ID
-          showModal={showDeleteModal} // Pass the modal visibility state
-          onClose={handleCloseModal} // Pass the function to close the modal
+          templateId={selectedTemplateId} 
+          showModal={showDeleteModal} 
+          onClose={handleCloseModal} 
           onTemplateDeleted={handleTemplateDeleted}
         />
       )}
       {showViewModal && (
         <ViewTemplate
+          templateId={selectedTemplateId}
           showModal={showViewModal}
           onClose={handleCloseModal}
+        />
+      )}
+       {showFormCreateModal && (
+        <CreateForm
           templateId={selectedTemplateId}
+          showModal={showFormCreateModal} 
+          onClose={handleCloseModal} 
+        />
+      )}
+      {showAggregationModal && (
+        <ViewAggregation
+          templateId={selectedTemplateId}
+          showModal={showAggregationModal}
+          onClose={handleCloseModal}
         />
       )}
     </>

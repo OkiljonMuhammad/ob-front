@@ -2,12 +2,11 @@ import { useState, useContext } from 'react';
 import { Form, Button, Container, Row, Col, Alert } from 'react-bootstrap';
 import { Link, useNavigate } from 'react-router-dom';
 import axios from 'axios';
-import ThemeContext from '../../context/ThemeContext';
 import AuthContext from '../../context/AuthContext';
-
+import ThemeContext from '../../context/ThemeContext';
+import { useTranslation } from 'react-i18next';
 const Register = () => {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
-  const { theme } = useContext(ThemeContext);
   const { login } = useContext(AuthContext);
   const [formData, setFormData] = useState({
     username: '',
@@ -17,6 +16,8 @@ const Register = () => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const { theme } = useContext(ThemeContext)
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   const handleChange = (e) => {
@@ -49,7 +50,7 @@ const Register = () => {
       login(response.data.token);
       axios.defaults.headers.common['Authorization'] =
         `Bearer ${response.data.token}`;
-      navigate('/dashboard');
+      navigate('/');
     } catch (err) {
       setError(
         err.response?.data?.message || 'Registration failed. Please try again.'
@@ -59,58 +60,64 @@ const Register = () => {
     }
   };
 
+  const getTextColorClass = () => (theme === 'light' ? 'text-dark' : 'text-white');
+
   return (
     <Container
       style={{ minHeight: '80vh' }}
-      className={`d-flex align-items-center justify-content-center bg-${theme} text-${theme === 'light' ? 'dark' : 'light'}`}
+      className={`d-flex align-items-center justify-content-center`}
     >
       <Row className="w-100 justify-content-center">
         <Col md={6} lg={4}>
           <div
-            className={`p-4 shadow rounded bg-${theme === 'light' ? 'white' : 'dark'}`}
           >
-            <h2 className="text-center mb-4">Register</h2>
-            {error && <Alert variant="danger">{error}</Alert>}
+            <h2 className="text-center mb-4">{t('register')}</h2>
+            {error && <Alert variant="danger" className='text-center'>{error}</Alert>}
 
             <Form onSubmit={handleSubmit}>
               <Form.Group className="mb-3">
-                <Form.Label>Username</Form.Label>
+                <Form.Label>{t('username')}</Form.Label>
                 <Form.Control
                   type="text"
                   name="username"
+                  minLength={3}
                   required
                   onChange={handleChange}
+                  className={`bg-${theme} ${getTextColorClass()}`}
                 />
               </Form.Group>
 
               <Form.Group className="mb-3">
-                <Form.Label>Email address</Form.Label>
+                <Form.Label>{t('emailAddress')}</Form.Label>
                 <Form.Control
                   type="email"
                   name="email"
                   required
                   onChange={handleChange}
+                  className={`bg-${theme} ${getTextColorClass()}`}
                 />
               </Form.Group>
 
               <Form.Group className="mb-3">
-                <Form.Label>Password</Form.Label>
+                <Form.Label>{t('password')}</Form.Label>
                 <Form.Control
                   type="password"
                   name="password"
                   required
                   minLength="6"
                   onChange={handleChange}
+                  className={`bg-${theme} ${getTextColorClass()}`}
                 />
               </Form.Group>
 
               <Form.Group className="mb-3">
-                <Form.Label>Confirm Password</Form.Label>
+                <Form.Label>{t('confirmPassword')}</Form.Label>
                 <Form.Control
                   type="password"
                   name="confirmPassword"
                   required
                   onChange={handleChange}
+                  className={`bg-${theme} ${getTextColorClass()}`}
                 />
               </Form.Group>
 
@@ -120,12 +127,12 @@ const Register = () => {
                 className="w-100"
                 disabled={loading}
               >
-                {loading ? 'Registering...' : 'Register'}
+                {loading ? t('registeringMessage') : t('register')}
               </Button>
             </Form>
 
             <div className="mt-3 text-center">
-              Already have an account? <Link to="/login">Login here</Link>
+              {t('haveAnAccount')} <Link to="/login">{t('loginHere')}</Link>
             </div>
           </div>
         </Col>
