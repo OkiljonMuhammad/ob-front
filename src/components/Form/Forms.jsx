@@ -214,9 +214,17 @@ export default function Forms() {
                     <Button
                       variant="info"
                       size="sm"
+                      className="me-2"
                       onClick={() => navigate(`/answers/${form.id}/${form.name}`)}
                     >
                       View Answers
+                    </Button>
+                    <Button
+                      variant="secondary"
+                      size="sm"
+                      onClick={() => navigate(`/form/access/${form.id}`)}
+                    >
+                      Access
                     </Button>
                   </td>
                 </tr>

@@ -24,6 +24,7 @@ import AdminRoute from './components/Auth/AdminRoute';
 import EditForm from './components/Form/EditForm';
 import Answers from './components/Answer/Answers';
 import CommentList from './components/Comment/CommentList';
+import FormAccessManagement from './components/FormAccess/FormAccessManagment';
 import './App.css';
 
 function App() {
@@ -158,13 +159,22 @@ function App() {
                   </Layout>
                 }
               />
-
-<Route
+              <Route
                 path="/comments/:templateId"
                 element={
                   <Layout>
                     <ProtectedRoute>
                       <CommentList />
+                    </ProtectedRoute>
+                  </Layout>
+                }
+              />
+              <Route
+                path="/form/access/:formId"
+                element={
+                  <Layout>
+                    <ProtectedRoute>
+                      <FormAccessManagement />
                     </ProtectedRoute>
                   </Layout>
                 }
