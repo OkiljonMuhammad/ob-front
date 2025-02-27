@@ -9,12 +9,13 @@ import ReactMarkdown from 'react-markdown';
 import EditTopic from '../Topic/EditTopic';
 import ThemeContext from '../../context/ThemeContext';
 import AddQuestion from '../Question/AddQuestion';
+import UploadImage from '../Image/UploadImage';
 
 export default function EditTemplate() {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const navigate = useNavigate();
   const { theme } = useContext(ThemeContext); 
-
+  const tabName = 'templates';
   const { templateId } = useParams();
 
   const [showPreview, setShowPreview] = useState(false);
@@ -141,13 +142,18 @@ export default function EditTemplate() {
         }
       );
       toast.success('Questions updated successfully!');
-      navigate('/dashboard');
+      navigate(`/dashboard/${tabName}`);
+
       setError(null);
     } catch (error) {
       console.error('Error updating questions:', error);
       setError('Failed to update questions. Please try again.');
       toast.error('Failed to update questions. Please try again.');
     }
+  };
+
+  const handleImageUpload = (imageUrl) => {
+    setFormData((prevData) => ({ ...prevData, image: imageUrl }));
   };
 
   const handleSaveQuestions = async (templateId, questions) => {
@@ -167,7 +173,7 @@ export default function EditTemplate() {
         }
       );
       toast.success('Questions saved successfully!');
-      navigate('/dashboard');
+      navigate(`/dashboard/${tabName}`);
       setError(null);
     } catch (error) {
       console.error('Error saving questions:', error);
@@ -188,7 +194,7 @@ export default function EditTemplate() {
         <Row className="mb-4">
           <Col>
             <Form.Group controlId="title">
-              <Form.Label>Title</Form.Label>
+              <Form.Label>Title <span className='custom-label'>(Required)</span></Form.Label>
               <Form.Control
                 type="text"
                 name="title"
@@ -205,7 +211,7 @@ export default function EditTemplate() {
         <Row className="mb-4">
           <Col>
             <Form.Group controlId="description">
-              <Form.Label>Description (Markdown Supported)</Form.Label>
+              <Form.Label>Description <span className='custom-label'>(Optional)</span></Form.Label>
               <Form.Control
                 as="textarea"
                 rows={6}
@@ -241,7 +247,7 @@ export default function EditTemplate() {
         <Row className="mb-4">
           <Col>
             <Form.Group controlId="topicId">
-              <Form.Label>Topic</Form.Label>
+              <Form.Label>Topic <span className='custom-label'>(Required)</span></Form.Label>
               <EditTopic
                 onTopicSelect={(topic) =>
                   setFormData((prevData) => ({
@@ -259,27 +265,24 @@ export default function EditTemplate() {
             </Form.Group>
           </Col>
         </Row>
+        {formData.image.length > 0 && (
+            <Row>
+              <Col>
+              <img src={formData.image} alt='image' className='img-fluid custom-img'></img>
+              </Col>
+            </Row>
+          )}
         <Row className="mb-4">
-          <Col>
-            <Form.Group controlId="image">
-              <Form.Label>Image URL</Form.Label>
-              <Form.Control
-                type="url"
-                name="image"
-                value={formData.image}
-                onChange={(e) =>
-                  setFormData({ ...formData, image: e.target.value })
-                }
-              />
-            </Form.Group>
-          </Col>
-        </Row>
+            <Col>
+              <UploadImage onUpload={handleImageUpload} />
+            </Col>
+          </Row>
         <Row className="mb-4">
           <Col>
             <Form.Group controlId="isPublic">
               <Form.Check
                 type="checkbox"
-                label="Public Template"
+                label="Public"
                 name="isPublic"
                 checked={formData.isPublic}
                 onChange={(e) =>
@@ -289,21 +292,10 @@ export default function EditTemplate() {
             </Form.Group>
           </Col>
         </Row>
-        {formData.tags.length > 0 && (
-          <Row className="mb-4">
-            <Col>
-              <Form.Group controlId="selectedTags">
-                <Form.Label>Selected Tags:</Form.Label>
-                <p>{formData.tags?.map((tag) => tag.label).join(', ')}</p>{' '}
-                {/* Replace with tag names if available */}
-              </Form.Group>
-            </Col>
-          </Row>
-        )}
         <Row className="mb-4">
           <Col>
             <Form.Group controlId="tags">
-              <Form.Label>Tags</Form.Label>
+              <Form.Label>Tags <span className='custom-label'>(Optional)</span></Form.Label>
               <EditTag
                 onTagsChange={(tags) => {
                   setFormData({ ...formData, tags });
@@ -316,7 +308,7 @@ export default function EditTemplate() {
         <Button
           variant="warning"
           className="me-2"
-          onClick={() => navigate('/dashboard')}
+          onClick={() => navigate(`/dashboard/${tabName}`)}
         >
           Cancel
         </Button>
@@ -329,10 +321,12 @@ export default function EditTemplate() {
         <div className='mt-3'>
           <AddQuestion
             templateId={templateId}
+            tabName={tabName}
             onSaveQuestions={handleSaveQuestions}
           />
           <UpdateQuestion
             templateId={templateId}
+            tabName={tabName}
             onSaveQuestions={handleUpdateQuestions}
           />
         </div>
@@ -345,6 +339,7 @@ export default function EditTemplate() {
           </Alert>
           <AddQuestion
             templateId={templateId}
+            tabName={tabName}
             onSaveQuestions={handleSaveQuestions}
           />
         </div>

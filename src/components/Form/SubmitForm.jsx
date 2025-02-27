@@ -4,19 +4,27 @@ import { useNavigate, useParams } from "react-router-dom";
 import axios from "axios";
 import { toast } from "react-toastify";
 import { jwtDecode } from "jwt-decode";
+import ReactMarkdown from 'react-markdown';
 import { decryptData } from "../../utils/authUtils";
 import ThemeContext from '../../context/ThemeContext';
+import AuthContext from '../../context/AuthContext';
+
 
 export default function SubmitForm() {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const navigate = useNavigate();
+  const tabName = 'forms';
   const { encryptedData } = useParams();
   const token = localStorage.getItem("token");
   const { theme } = useContext(ThemeContext); 
+  const { isAuthenticated } = useContext(AuthContext);
   const [questions, setQuestions] = useState([]);
+  const [template, setTemplate] = useState([]);
   const [answers, setAnswers] = useState({});
   const [submitted, setSubmitted] = useState(false);
   const [userId, setUserId] = useState(null);
+  const [loading, setLoading] = useState(true);
+  
 
   let formId, templateId;
   try {
@@ -38,20 +46,42 @@ export default function SubmitForm() {
     }
   }, [token]);
 
-  useEffect(() => {
-    const fetchQuestions = async () => {
-      try {
-        const response = await axios.get(`${BASE_URL}/api/question/questions/${templateId}`, {
-          headers: { Authorization: `Bearer ${token}` },
-        });
-        setQuestions(response.data.questions);
-      } catch (error) {
-        console.error("Error fetching questions:", error);
-        toast.error("Failed to load questions");
-      }
-    };
+  const fetchQuestions = async () => {
+    try {
+      const response = await axios.get(`${BASE_URL}/api/question/questions/${templateId}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      setQuestions(response.data.questions);
+    } catch (error) {
+      console.error("Error fetching questions:", error);
+      toast.error("Failed to load questions");
+    }
+  };
 
-    if (templateId) fetchQuestions();
+  const fetchTemplate = async () => {
+    try {
+      const url = isAuthenticated
+        ? `${BASE_URL}/api/template/${templateId}`
+        : `${BASE_URL}/api/template/public/${templateId}`;
+      const response = await axios.get(url, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('token')}` || '',
+        },
+      });
+      const fetchedTemplateData = response.data.template;
+      setTemplate(fetchedTemplateData);
+      setLoading(false);
+    } catch (error) {
+      console.error('Error fetching template:', error);
+      setError(error.response?.data?.message || 'Failed to load template data.');
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchTemplate();
+    if (templateId) {
+      fetchQuestions()};
   }, [templateId, token]);
 
   const handleChange = (questionId, value) => {
@@ -62,7 +92,7 @@ export default function SubmitForm() {
   };
 
   const closePage = () => {
-    navigate('/dashboard')
+    navigate(`/dashboard/${tabName}`);
   }
   const submitAnswers = async () => {
     
@@ -90,7 +120,7 @@ export default function SubmitForm() {
 
       toast.success("Submitted successfully");
       setSubmitted(true);
-      navigate('/dashboard')
+      navigate(`/dashboard/${tabName}`);
     } catch (error) {
       console.error("Error submitting answers:", error);
       toast.error("Failed to submit answers");
@@ -111,7 +141,14 @@ export default function SubmitForm() {
             Close
           </Button>
         </div>
-      ) : (questions.length === 0 ? (
+      ) : (loading ? (
+        <div className="d-flex justify-content-center text-center">
+        <div>
+          <div className="spinner-grow text-primary"></div>
+          <p>Loading questions...</p>
+        </div>
+      </div>
+      ) : questions.length === 0 ? (
           <div className="py-4 d-flex flex-column align-items-center justify-content-center">
           <h2 className="mb-4 text-center">No questions</h2>
             <Button 
@@ -122,11 +159,28 @@ export default function SubmitForm() {
             </Button>
           </div>
         ) : (<>
-          <h3 className="mb-4">Fill Out the Form</h3>
+            <h3 className="text-center mt-4 mb-4">Fill Out the Form</h3>
+            {template.image.length > 0 && (
+              <Row>
+                <Col>
+                <h5>Image:</h5>
+                <img src={template.image} alt='image' className='img-fluid custom-img'></img>
+                </Col>
+              </Row>
+            )}
+            <h5>Title: {template.title}</h5>
+            {template.description && (
+              <h6>
+                <ReactMarkdown>
+                {`Description: ${template.description}` || "No description provided."}
+                </ReactMarkdown>
+              </h6>
+            )}
+
           <Form>
-            {questions.map((question) => (
+            {questions.map((question, index) => (
               <Form.Group key={question.id} className="mb-3">
-                <Form.Label>{question.text}</Form.Label>
+                <Form.Label>{index + 1}. {question.text}</Form.Label>
                 {question.type === "single-line" && (
                   <Form.Control
                     type="text"
@@ -134,7 +188,7 @@ export default function SubmitForm() {
                     value={answers[question.id] || ""}
                     onChange={(e) => handleChange(question.id, e.target.value)}
                     required
-                    className={`bg-${theme} ${getTextColorClass()}`}
+                    className={`bg-${theme} ${getTextColorClass()} custom-placeholder`}
                   />
                 )}
                 {question.type === "multi-line" && (
@@ -145,7 +199,7 @@ export default function SubmitForm() {
                     value={answers[question.id] || ""}
                     onChange={(e) => handleChange(question.id, e.target.value)}
                     required
-                    className={`bg-${theme} ${getTextColorClass()}`}
+                    className={`bg-${theme} ${getTextColorClass()} custom-placeholder`}
                   />
                 )}
                 {question.type === "integer" && (
@@ -155,7 +209,7 @@ export default function SubmitForm() {
                     value={answers[question.id] || ""}
                     onChange={(e) => handleChange(question.id, e.target.value)}
                     required
-                    className={`bg-${theme} ${getTextColorClass()}`}
+                    className={`bg-${theme} ${getTextColorClass()} custom-placeholder`}
                   />
                 )}
                 {question.type === "checkbox" && (
@@ -164,7 +218,7 @@ export default function SubmitForm() {
                     label="Check if applicable"
                     checked={answers[question.id] || false}
                     onChange={(e) => handleChange(question.id, e.target.checked)}
-                    className={`bg-${theme} ${getTextColorClass()}`}
+                    className={`bg-${theme} ${getTextColorClass()} custom-label`}
                   />
                 )}
               </Form.Group>
@@ -174,7 +228,7 @@ export default function SubmitForm() {
                 <Button
                   variant="warning"
                   className="me-2"
-                  onClick={() => navigate('/dashboard')}
+                  onClick={() => navigate(`/dashboard/${tabName}`)}
                 >
                   Cancel
                 </Button>

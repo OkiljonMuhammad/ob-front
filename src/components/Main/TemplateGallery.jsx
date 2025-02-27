@@ -6,9 +6,10 @@ import ViewTemplate from '../Template/ViewTemplate';
 import ThemeContainer from '../Layout/ThemeContainer';
 import ThemeContext from '../../context/ThemeContext';
 import { useTranslation } from 'react-i18next';
-
+import { useNavigate } from 'react-router-dom';
 const TemplateGallery = ({ selectedTagId: tagId }) => {
   const { theme } = useContext(ThemeContext);
+  const navigate = useNavigate();
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [templates, setTemplates] = useState([]);
   const [topics, setTopics] = useState([]);
@@ -116,13 +117,10 @@ const TemplateGallery = ({ selectedTagId: tagId }) => {
             <InputGroup>
               <Form.Control
                 type="text"
-                className={`bg-${theme} ${getTextColorClass()}`}
+                className={`bg-${theme} ${getTextColorClass()} custom-placeholder`}
                 placeholder={t('EnterTemplateTitle')}
                 value={searchQuery}
                 onChange={handleSearchChange}
-                style={{
-                  '--placeholder-color': theme === 'light' ? '#6c757d' : '#fff',
-                }}
               />
               {searchQuery && (
                 <InputGroup.Text style={{ cursor: 'pointer' }} onClick={handleClearSearch}>
@@ -151,11 +149,11 @@ const TemplateGallery = ({ selectedTagId: tagId }) => {
       </Row>
       {loading ? (
         <>
-        <div className="spinner-border"></div>
+        <div className="spinner-grow text-primary"></div>
         <p className="text-center">{t('loadingTemplate')}</p>
         </>
       ) : templates.length === 0 ? (
-        <p className="display-5 text-center">{t('noTemplatesFound')}</p>
+        <p className="text-center">{t('noTemplatesFound')}</p>
       ) : (
         <>
           <Row xs={1} md={3} className="g-4">
@@ -173,6 +171,15 @@ const TemplateGallery = ({ selectedTagId: tagId }) => {
                       onClick={() => handleViewClick(template.id)}
                     >
                       {t('viewTemplate')}
+                    </Button>
+                     <Button
+                      variant="primary"
+                      size="sm"
+                      className="me-2"
+
+                      onClick={() => navigate(`/comments/${template.id}`)}
+                    >
+                      Comments
                     </Button>
                   </Card.Body>
                 </Card>

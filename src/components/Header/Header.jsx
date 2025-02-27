@@ -35,7 +35,7 @@ const Header = ({ theme }) => {
               </>
             ) : (
               <>
-                <Nav.Link href="/dashboard">Dashboard</Nav.Link>
+                <Nav.Link href={`/dashboard/${'templates'}`}>Dashboard</Nav.Link>
                 <Nav.Link onClick={logout} href="/">
                   {t('logout')}
                 </Nav.Link>

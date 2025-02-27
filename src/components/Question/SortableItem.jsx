@@ -33,13 +33,13 @@ const SortableItem = ({ id, question, onChange, onDelete }) => {
         <Row>
         <Col>
           <Form.Group controlId={`text-${id}`}>
-            <Form.Label>Question ({question.type})</Form.Label>
+            <Form.Label>Question <span className='custom-label'>({question.type})</span></Form.Label>
             <Form.Control
               type="text"
               value={question.text}
               onChange={(e) => onChange('text', e.target.value)}
               placeholder="Type question"
-              className={`bg-${theme} ${getTextColorClass()}`}
+              className={`bg-${theme} ${getTextColorClass()} custom-placeholder`}
             />
           </Form.Group>
         </Col>
@@ -52,6 +52,7 @@ const SortableItem = ({ id, question, onChange, onDelete }) => {
               type="switch"
               label="Visible in Table"
               checked={question.isVisibleInTable}
+              className='custom-label'
               onChange={(e) => onChange('isVisibleInTable', e.target.checked)}
             />
           </Form.Group>

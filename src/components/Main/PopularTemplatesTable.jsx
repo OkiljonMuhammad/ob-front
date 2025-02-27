@@ -5,8 +5,10 @@ import ViewTemplate from '../Template/ViewTemplate';
 import ThemeContainer from '../Layout/ThemeContainer';
 import ThemeContext from '../../context/ThemeContext';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 
 const PopularTemplates = () => {
+  const navigate = useNavigate();
   const { theme } = useContext(ThemeContext);
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [templates, setTemplates] = useState([]);
@@ -55,11 +57,11 @@ const PopularTemplates = () => {
       </Row>
       {loading ? (
         <>
-        <div className="spinner-border"></div>
+        <div className="spinner-grow text-primary"></div>
         <p className="text-center">{t('loadingTemplate')}</p>
         </>
       ) : templates.length === 0 ? (
-        <p className="display-5 text-center">{t('noTemplatesFound')}</p>
+        <p className="text-center">{t('noTemplatesFound')}</p>
       ) : (
         <>
           <Row xs={1} md={3} className="g-4">
@@ -77,6 +79,15 @@ const PopularTemplates = () => {
                       onClick={() => handleViewClick(template.id)}
                     >
                       {t('viewTemplate')}
+                    </Button>
+                    <Button
+                      variant="primary"
+                      size="sm"
+                      className="me-2"
+
+                      onClick={() => navigate(`/comments/${template.id}`)}
+                    >
+                      Comments
                     </Button>
                   </Card.Body>
                 </Card>

@@ -26,7 +26,7 @@ import {
 import SortableItem from './SortableItem';
 import { useNavigate } from 'react-router-dom';
 
-const AddQuestion = ({ templateId, onSaveQuestions }) => {
+const AddQuestion = ({ templateId, tabName, onSaveQuestions }) => {
   const navigate = useNavigate();
   const { theme } = useContext(ThemeContext); 
   const [questions, setQuestions] = useState([]);
@@ -98,6 +98,7 @@ const AddQuestion = ({ templateId, onSaveQuestions }) => {
       order: index + 1,
     }));
     onSaveQuestions(templateId, payload);
+    navigate(`/dashboard/${tabName}`);
   };
 
   const getTextColorClass = () => (theme === 'light' ? 'text-dark' : 'text-white');
@@ -155,7 +156,7 @@ const AddQuestion = ({ templateId, onSaveQuestions }) => {
         <Button
           variant="warning"
           className="me-2 mt-3"
-          onClick={() => navigate('/dashboard')}
+          onClick={() => navigate(`/dashboard/${tabName}`)}
         >
           Cancel
         </Button>

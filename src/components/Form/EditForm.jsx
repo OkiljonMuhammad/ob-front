@@ -15,6 +15,7 @@ export default function EditForm() {
   const [questions, setQuestions] = useState([]);
   const [error, setError] = useState(null);
   const [loading, setLoading] = useState(true);
+  const tabName = 'forms';
 
   const fetchQuestions = async () => {
     try {
@@ -66,7 +67,7 @@ export default function EditForm() {
         }
       );
       toast.success('Questions updated successfully!');
-      navigate('/dashboard');
+      navigate(`/dashboard/${tabName}`);
       setError(null);
     } catch (error) {
       console.error('Error updating questions:', error);
@@ -92,7 +93,7 @@ export default function EditForm() {
         }
       );
       toast.success('Questions saved successfully!');
-      navigate('/dashboard');
+      navigate(`/dashboard/${tabName}`);
       setError(null);
     } catch (error) {
       console.error('Error saving questions:', error);
@@ -108,10 +109,12 @@ export default function EditForm() {
         <div className='mt-3'>
           <AddQuestion
             templateId={templateId}
+            tabName={tabName}
             onSaveQuestions={handleSaveQuestions}
           />
           <UpdateQuestion
             templateId={templateId}
+            tabName={tabName}
             onSaveQuestions={handleUpdateQuestions}
           />
         </div>
@@ -124,6 +127,7 @@ export default function EditForm() {
           </Alert>
           <AddQuestion
             templateId={templateId}
+            tabName={tabName}
             onSaveQuestions={handleSaveQuestions}
           />
         </div>

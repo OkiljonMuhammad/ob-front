@@ -24,14 +24,15 @@ import SortableItem from './SortableItem';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import ThemeContext from '../../context/ThemeContext';
+import { useNavigate } from 'react-router-dom';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-const UpdateQuestion = ({ templateId, onSaveQuestions }) => {
+const UpdateQuestion = ({ templateId, tabName, onSaveQuestions }) => {
   const { theme } = useContext(ThemeContext); 
   const [questions, setQuestions] = useState([]);
   const [error, setError] = useState(null);
-
+  const navigate = useNavigate();
   useEffect(() => {
     fetchQuestions();
   }, [templateId]);
@@ -89,6 +90,7 @@ const UpdateQuestion = ({ templateId, onSaveQuestions }) => {
         order: index + 1,
       }));
       await onSaveQuestions(templateId, updatedQuestions);
+      navigate(`/dashboard/${tabName}`);
     } catch (error) {
       console.error('Error saving questions:', error);
       setError('Failed to save questions. Please try again.');
@@ -129,7 +131,7 @@ const UpdateQuestion = ({ templateId, onSaveQuestions }) => {
         </DndContext>
         <Row className="mt-3">
           <Col xs="auto">
-            <Button variant="warning" onClick={() => window.history.back()}>
+            <Button variant="warning" onClick={() => navigate(`/dashboard/${tabName}`)}>
               Cancel
             </Button>
           </Col>

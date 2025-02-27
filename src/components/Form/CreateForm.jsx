@@ -12,7 +12,7 @@ const CreateForm = ({ templateId, showModal, onClose }) => {
   const handleFormSubmit = async () => {
     setIsCreating(true);
     try {
-      await axios.post(`${BASE_URL}/api/form/create`,
+      const response = await axios.post(`${BASE_URL}/api/form/create`,
         { templateId }, 
         {
           headers: {

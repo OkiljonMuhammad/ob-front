@@ -12,6 +12,7 @@ import ThemeContext from '../../context/ThemeContext';
 
 export default function CreateTemplate() {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  const tabName = 'templates';
   const navigate = useNavigate();
   const [showPreview, setShowPreview] = useState(false);
   const [formData, setFormData] = useState({
@@ -68,7 +69,7 @@ export default function CreateTemplate() {
         }
       );
       toast.success('Questions saved successfully!');
-      navigate('/dashboard');
+      navigate(`/dashboard/${tabName}`);
       setError(null);
     } catch (error) {
       console.error('Error saving questions:', error);
@@ -85,14 +86,13 @@ export default function CreateTemplate() {
 
   return (
     <Container fluid className="py-4">
-      {/* Template Creation Form */}
       {!templateId && (
         <Form onSubmit={handleSubmit}>
           <h2>Create New Template</h2>
           <Row className="mb-3">
             <Col>
               <Form.Group controlId="title">
-                <Form.Label>Title</Form.Label>
+                <Form.Label>Title <span className='custom-label'>(Required)</span></Form.Label>
                 <Form.Control
                   type="text"
                   name="title"
@@ -109,7 +109,7 @@ export default function CreateTemplate() {
           <Row className="mb-3">
             <Col>
               <Form.Group controlId="description">
-                <Form.Label>Description (Markdown Supported)</Form.Label>
+                <Form.Label>Description <span className='custom-label'>(Optional)</span></Form.Label>
                 <Form.Control
                   as="textarea"
                   rows={6}
@@ -144,7 +144,7 @@ export default function CreateTemplate() {
           <Row className="mb-3">
             <Col>
               <Form.Group controlId="topicId">
-                <Form.Label>Topic</Form.Label>
+                <Form.Label>Topic <span className='custom-label'>(Required)</span></Form.Label>
                 <TopicSuggest
                   onTopicSelect={(topicId) =>
                     setFormData((prevData) => ({
@@ -166,7 +166,7 @@ export default function CreateTemplate() {
               <Form.Group controlId="isPublic">
                 <Form.Check
                   type="checkbox"
-                  label="Public Template"
+                  label="Public"
                   name="isPublic"
                   checked={formData.isPublic}
                   onChange={(e) =>
@@ -179,7 +179,7 @@ export default function CreateTemplate() {
           <Row className="mb-3">
             <Col>
               <Form.Group controlId="tags">
-                <Form.Label>Tags</Form.Label>
+                <Form.Label>Tags (Optional)</Form.Label>
                 <TagAutoComplete
                   onTagsChange={(tags) => setFormData({ ...formData, tags })}
                 />
@@ -191,7 +191,7 @@ export default function CreateTemplate() {
           <Button
             variant="warning"
             className="me-2"
-            onClick={() => navigate('/dashboard')}
+            onClick={() => navigate(`/dashboard/${tabName}`)}
           >
             Cancel
           </Button>
@@ -212,6 +212,7 @@ export default function CreateTemplate() {
           </Alert>
           <AddQuestion
             templateId={templateId}
+            tabName={tabName}
             onSaveQuestions={handleSaveQuestions}
           />
         </div>

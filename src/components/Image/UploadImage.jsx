@@ -2,19 +2,30 @@ import React, { useState, useContext } from 'react';
 import { Button, Form } from 'react-bootstrap';
 import axios from 'axios';
 import { toast } from 'react-toastify';
+import Compressor from 'compressorjs';
 import ThemeContext from '../../context/ThemeContext';
 
 const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 const UploadImage = ({ onUpload }) => {
   const [selectedFile, setSelectedFile] = useState(null);
-  const [preview, setPreview] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
   const { theme } = useContext(ThemeContext); 
+  const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
   const handleFileChange = (e) => {
-    setSelectedFile(e.target.files[0]);
+    const file = e.target.files[0];
+    if (file) {
+      new Compressor(file, {
+        quality: 0.8,
+        success: (compressedFile) => {
+          setSelectedFile(compressedFile);
+        },
+        error: (err) => {
+          console.error(err);
+        },
+      });
+    }
   };
-  const MAX_FILE_SIZE = 5 * 1024 * 1024;
 
   const handleUpload = async () => {
     if (!selectedFile) {
@@ -25,6 +36,10 @@ const UploadImage = ({ onUpload }) => {
     setIsUploading(true);
   
     try {
+      if (selectedFile.size > MAX_FILE_SIZE) {
+  toast.error("File size exceeds the maximum limit of 5 MB.");
+  return;
+}
       const reader = new FileReader();
       reader.readAsDataURL(selectedFile);
       reader.onloadend = async () => {
@@ -42,7 +57,6 @@ const UploadImage = ({ onUpload }) => {
         toast.success("Image uploaded successfully!");
   
         setSelectedFile(null);
-        setPreview(null);
       };
   
       reader.onerror = (error) => {
@@ -62,7 +76,7 @@ const UploadImage = ({ onUpload }) => {
   return (
     <div>
       <Form.Group controlId="imageUpload">
-        <Form.Label>Upload Image</Form.Label>
+        <Form.Label>Upload Image <span className='custom-label'>(Optional)</span></Form.Label>
         <Form.Control
           type="file"
           accept="image/*"
@@ -71,13 +85,6 @@ const UploadImage = ({ onUpload }) => {
           className={`bg-${theme} ${getTextColorClass()}`}
         />
       </Form.Group>
-      {preview && (
-        <img
-          src={preview}
-          alt="Preview"
-          style={{ width: '100px', marginTop: '10px' }}
-        />
-      )}
       <Button
         variant="primary"
         onClick={handleUpload}

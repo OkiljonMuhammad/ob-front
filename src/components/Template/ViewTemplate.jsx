@@ -41,7 +41,7 @@ export default function ViewTemplate({ showModal, onClose, templateId }) {
         description: fetchedTemplateData.description || 'No Description',
         topicId: fetchedTemplateData.Topic?.id || '',
         topicName: fetchedTemplateData.Topic?.topicName || 'No Topic',
-        image: fetchedTemplateData.image || 'No Image URL',
+        image: fetchedTemplateData.image || '',
         isPublic: fetchedTemplateData.isPublic || false,
         tags: fetchedTemplateData.Tags?.map((tag) => ({
           id: tag.id,
@@ -116,7 +116,15 @@ export default function ViewTemplate({ showModal, onClose, templateId }) {
         <Modal.Title className="w-100">Template Details</Modal.Title>
       </Modal.Header>
       <Modal.Body className={`p-3 bg-${theme} ${getTextColorClass()}`}>
-        <Row className="mb-3">
+      {templateData.image.length > 0 && (
+            <Row>
+              <Col>
+              <h5>Image:</h5>
+              <img src={templateData.image} alt='image' className='img-fluid custom-img'></img>
+              </Col>
+            </Row>
+          )}
+        <Row className="mt-3 mb-3">
           <Col>
             <h5>Title:</h5>
             <p>{templateData.title}</p>

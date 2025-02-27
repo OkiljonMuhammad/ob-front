@@ -23,6 +23,7 @@ import SubmitForm from './components/Form/SubmitForm';
 import AdminRoute from './components/Auth/AdminRoute';
 import EditForm from './components/Form/EditForm';
 import Answers from './components/Answer/Answers';
+import CommentList from './components/Comment/CommentList';
 import './App.css';
 
 function App() {
@@ -58,7 +59,7 @@ function App() {
                 }
               />
               <Route
-                path="/dashboard"
+                path="/dashboard/:tab"
                 element={
                   <Layout>
                     <ProtectedRoute>
@@ -153,6 +154,17 @@ function App() {
                   <Layout>
                     <ProtectedRoute>
                       <Answers />
+                    </ProtectedRoute>
+                  </Layout>
+                }
+              />
+
+<Route
+                path="/comments/:templateId"
+                element={
+                  <Layout>
+                    <ProtectedRoute>
+                      <CommentList />
                     </ProtectedRoute>
                   </Layout>
                 }

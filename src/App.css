@@ -6,9 +6,18 @@
   font-size: 1.5rem;
 }
 
+.custom-label {
+  color: gray !important;
+}
 
-.form-control::placeholder {
-  color: var(--placeholder-color);
+.custom-placeholder::placeholder {
+  color: gray !important;
+  opacity: 1;
+}
+
+.custom-img {
+  max-height: 200px;
+  width: auto;
 }
 
 .table-dark {

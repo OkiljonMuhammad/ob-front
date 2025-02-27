@@ -131,7 +131,7 @@ export default function Answers() {
                     placeholder="Enter user id..."
                     value={searchQuery}
                     onChange={handleSearchChange}
-                    className={`bg-${theme} ${getTextColorClass()}`}
+                    className={`bg-${theme} ${getTextColorClass()} custom-placeholder`}
                     />
                     {searchQuery && (
                       <InputGroup.Text style={{ cursor: 'pointer' }} onClick={handleClearSearch}>
@@ -146,12 +146,12 @@ export default function Answers() {
           {loading ? (
             <div className="d-flex justify-content-center text-center">
             <div>
-              <div className="spinner-border"></div>
+              <div className="spinner-grow text-primary"></div>
               <p>Loading answers...</p>
             </div>
           </div>
           ) : answers.length === 0 ? (
-          <p className="display-5 text-center">No Answers</p>
+          <p className="text-center">No Answers</p>
           ) :(
             <>
               <Table striped bordered hover responsive className={`text-center table-${theme}`}>
@@ -166,7 +166,7 @@ export default function Answers() {
                 <tbody>
                   {answers.map((answer, index) => (
                     <tr key={answer.id ? `answer-${answer.id}` : `answer-index-${index}`}>
-                      <td>{index + 1}</td>
+                     <td>{(pagination.page - 1) * 10 + index + 1}</td>
                       <td>{answer.username}</td>
                       <td>{answer.userId}</td>
                       <td>

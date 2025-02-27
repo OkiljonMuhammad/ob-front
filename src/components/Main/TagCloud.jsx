@@ -33,7 +33,7 @@ const TagCloud = ({ onTagSelect, selectedTagId }) => {
       style={{ padding: '1rem' }}
     >
       {tags.length === 0 ? (
-        <p className="display-6">{t('noTagsFound')}</p>
+        <p>{t('noTagsFound')}</p>
       ) : (
         tags.map((tag) => (
           <Badge

@@ -1,15 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import { Form, Button, Row, Col, Container, Alert, InputGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import UserRoleSelect from './UserRoleSelect';
 import { Eye, EyeSlash } from 'react-bootstrap-icons';
+import ThemeContext from '../../../context/ThemeContext';
 
 export default function CreateUser() {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const navigate = useNavigate();
   const [error, setError] = useState('');
+  const { theme } = useContext(ThemeContext);
 
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -70,6 +72,8 @@ export default function CreateUser() {
     }
   };
 
+  const getTextColorClass = () => (theme === 'light' ? 'text-dark' : 'text-white');
+
   return (
     <Container fluid className="py-4">
         <Form onSubmit={handleSubmit}>
@@ -78,13 +82,15 @@ export default function CreateUser() {
           <Row className="mb-3">
             <Col>
               <Form.Group controlId="username">
-                <Form.Label>username</Form.Label>
+                <Form.Label>Username</Form.Label>
                 <Form.Control
                   type="text"
                   name="username"
+                  placeholder='Enter username'
                   value={userData.username}
                   minLength={3}
                   onChange={handleChange}
+                  className={`bg-${theme} ${getTextColorClass()} custom-placeholder`}
                   required
                 />
               </Form.Group>
@@ -93,12 +99,14 @@ export default function CreateUser() {
           <Row className="mb-3">
             <Col>
               <Form.Group controlId="email">
-                <Form.Label>email</Form.Label>
+                <Form.Label>Email</Form.Label>
                 <Form.Control
                   type="email"
                   name="email"
+                  placeholder='Enter email'
                   value={userData.email}
                   onChange={handleChange}
+                  className={`bg-${theme} ${getTextColorClass()} custom-placeholder`}
                   required
                 />
               </Form.Group>
@@ -113,12 +121,15 @@ export default function CreateUser() {
                             type={showPassword ? 'text' : 'password'}
                             name="password"
                             value={userData.password}
+                            placeholder='Enter password'
                             minLength={6}
+                            className={`bg-${theme} ${getTextColorClass()} custom-placeholder`}
                             onChange={handleChange}
                           />
                           <InputGroup.Text
                             style={{ cursor: 'pointer' }}
                             onClick={() => setShowPassword(!showPassword)}
+                            className={`bg-${theme} ${getTextColorClass()}`}
                           >
                             {showPassword ? <EyeSlash /> : <Eye />}
                           </InputGroup.Text>

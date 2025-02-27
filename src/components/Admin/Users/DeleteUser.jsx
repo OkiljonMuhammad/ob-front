@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useContext } from 'react';
 import axios from 'axios';
 import { toast } from 'react-toastify';
 import { Modal, Button } from 'react-bootstrap';
+import ThemeContext from '../../../context/ThemeContext';
 
 const DeleteUser = ({ userId, showModal, onClose, onUserDeleted }) => {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [isDeleting, setIsDeleting] = useState(false);
+  const { theme } = useContext(ThemeContext); 
 
   const handleDelete = async () => {
     setIsDeleting(true);
@@ -17,7 +19,7 @@ const DeleteUser = ({ userId, showModal, onClose, onUserDeleted }) => {
       });
       toast.success('User deleted successfully.');
       onUserDeleted(userId);
-      onClose(); // Close the modal after successful deletion
+      onClose();
     } catch (error) {
       toast.error('Failed to delete user. Please try again.');
     } finally {
@@ -25,15 +27,20 @@ const DeleteUser = ({ userId, showModal, onClose, onUserDeleted }) => {
     }
   };
 
+  const getTextColorClass = () => (theme === 'light' ? 'text-dark' : 'text-white');
+
   return (
     <Modal show={showModal} onHide={onClose} centered className="text-center">
-      <Modal.Header closeButton>
+      <Modal.Header 
+      closeButton
+      className={`bg-${theme} ${getTextColorClass()}`}>
+
         <Modal.Title className='w-100'>Delete User</Modal.Title>
       </Modal.Header>
-      <Modal.Body>
+      <Modal.Body className={`bg-${theme} ${getTextColorClass()}`}>
         Are you sure you want to delete this user?
       </Modal.Body>
-      <Modal.Footer>
+      <Modal.Footer className={`bg-${theme} ${getTextColorClass()}`}>
         <Button
           variant="danger"
           onClick={handleDelete}

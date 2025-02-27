@@ -155,7 +155,7 @@ export default function Templates() {
                 placeholder="Enter template title..."
                 value={searchQuery}
                 onChange={handleSearchChange}
-                className={`bg-${theme} ${getTextColorClass()}`}
+                className={`bg-${theme} ${getTextColorClass()} custom-placeholder`}
                 />
                 {searchQuery && (
                   <InputGroup.Text style={{ cursor: 'pointer' }} onClick={handleClearSearch}>
@@ -186,12 +186,12 @@ export default function Templates() {
       {loading ? (
          <div className="d-flex justify-content-center text-center">
          <div>
-           <div className="spinner-border"></div>
+           <div className="spinner-grow text-primary"></div>
            <p>Loading templates...</p>
          </div>
        </div>
       ) : templates.length === 0 ? (
-      <p className="display-5 text-center">No Templates</p>
+      <p className="text-center">No Templates</p>
       ) :(
         <>
           <Table striped bordered hover responsive className={`text-center table-${theme}`} >
@@ -207,7 +207,7 @@ export default function Templates() {
             <tbody>
               {templates.map((template, index) => (
                 <tr key={template.id}>
-                  <td>{index + 1}</td>
+                 <td>{(pagination.page - 1) * 10 + index + 1}</td>
                   <td>{template.title}</td>
                   <td>{new Date(template.createdAt).toLocaleDateString()}</td>
                   <td>{template.Topic?.topicName || 'No Topic'}</td>
@@ -247,6 +247,15 @@ export default function Templates() {
                     </Button>
                     <Button
                       variant="primary"
+                      size="sm"
+                      className="me-2"
+
+                      onClick={() => navigate(`/comments/${template.id}`)}
+                    >
+                      Comments
+                    </Button>
+                    <Button
+                      variant="secondary"
                       size="sm"
                       onClick={() => handleAggregationClick(template.id)}
                     >

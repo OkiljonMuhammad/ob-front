@@ -29,6 +29,7 @@ export default function Forms() {
   const [showFormCreateModal, setShowFormCreateModal] = useState(false);
   const [showUseFormModal, setShowUseFormModal] = useState(false);
   const [selectedFormId, setSelectedFormId] = useState(null);
+  const [reload, setReload] = useState(false);
   const { theme } = useContext(ThemeContext); 
 
   const encryptedUrl = (form) => {
@@ -46,20 +47,11 @@ export default function Forms() {
     setShowDeleteModal(true);
   };
 
-  const handleFormCreateClick = (templateId) => {
-    setSelectedFormId(templateId);
-    setShowFormCreateModal(true);
-  };
-
   const handleUseFormClick = (form) => {
     setSelectedFormId(form);
     setShowUseFormModal(true);
   };
 
-  const handleViewClick = (templateId) => {
-    setSelectedFormId(templateId);
-    setShowViewModal(true);
-  };
   const handleCloseModal = () => {
     setShowDeleteModal(false);
     setShowViewModal(false);
@@ -104,7 +96,7 @@ export default function Forms() {
 
   useEffect(() => {
     debouncedFetchForms(searchQuery);
-  }, [searchQuery]);
+  }, [searchQuery, reload]);
 
   const handlePageChange = (newPage) => {
     fetchForms(newPage, 10, searchQuery);
@@ -128,6 +120,11 @@ export default function Forms() {
             Create Form
           </Button>
         </Col>
+        <Col>
+          <Button variant="success" onClick={() => setReload(!reload)}>
+            Reload
+          </Button>
+        </Col>
         <Col xs="auto">
         <Form.Group controlId="searchInput">
             <Form.Label>Search Forms</Form.Label>
@@ -137,7 +134,7 @@ export default function Forms() {
                 placeholder="Enter form name..."
                 value={searchQuery}
                 onChange={handleSearchChange}
-                className={`bg-${theme} ${getTextColorClass()}`}
+                className={`bg-${theme} ${getTextColorClass()} custom-placeholder`}
                 />
                 {searchQuery && (
                   <InputGroup.Text style={{ cursor: 'pointer' }} onClick={handleClearSearch}>
@@ -152,12 +149,12 @@ export default function Forms() {
       {loading ? (
          <div className="d-flex justify-content-center text-center">
          <div>
-           <div className="spinner-border"></div>
+           <div className="spinner-grow text-primary"></div>
            <p>Loading forms...</p>
          </div>
        </div>
       ) : forms.length === 0 ? (
-      <p className="display-5 text-center">No Forms</p>
+      <p className="text-center">No Forms</p>
       ) :(
         <>
           <Table striped bordered hover responsive className={`text-center table-${theme}`}>
@@ -173,7 +170,7 @@ export default function Forms() {
             <tbody>
               {forms.map((form, index) => (
                 <tr key={form.id}>
-                  <td>{index + 1}</td>
+                  <td>{(pagination.page - 1) * 10 + index + 1}</td>
                   <td>{form.name}</td>
                   <td>{form.id}</td>
                   <td>{new Date(form.createdAt).toLocaleDateString()}</td>

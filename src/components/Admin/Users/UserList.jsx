@@ -163,7 +163,7 @@ export default function Users() {
                 placeholder="Enter user name..."
                 value={searchQuery}
                 onChange={handleSearchChange}
-                className={`bg-${theme} ${getTextColorClass()}`}
+                className={`bg-${theme} ${getTextColorClass()} custom-placeholder`}
                 />
                 {searchQuery && (
                   <InputGroup.Text style={{ cursor: 'pointer' }} onClick={handleClearSearch}>
@@ -194,12 +194,12 @@ export default function Users() {
       {loading ? (
          <div className="d-flex justify-content-center text-center">
          <div>
-           <div className="spinner-border"></div>
+           <div className="spinner-grow text-primary"></div>
            <p>Loading users...</p>
          </div>
        </div>
       ) : users.length === 0 ? (
-      <p className="display-5 text-center">No Users</p>
+      <p className="text-center">No Users</p>
       ) :(
         <>
           <Table striped bordered hover responsive className={`text-center table-${theme}`}>
@@ -217,7 +217,7 @@ export default function Users() {
             <tbody>
               {users.map((user, index) => (
                 <tr key={user.id}>
-                  <td>{index + 1}</td>
+                  <td>{(pagination.page - 1) * 10 + index + 1}</td>
                   <td>{user.username}</td>
                   <td>{user.email}</td>
                   <td>{user.isBlocked ? "Blocked" : "Active"}</td>
