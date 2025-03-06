@@ -17,9 +17,8 @@ const LanguageSwitcher = () => {
       id="language-dropdown"
       title={t('language')}
       variant="secondary"
-      className="me-2"
-      
-    >
+      className={`me-2 bg-${theme} ${getTextColorClass()}`}
+    > 
       <Dropdown.Item onClick={() => changeLanguage('en')} className={`bg-${theme} ${getTextColorClass()}`}>
         {t('english')}
       </Dropdown.Item>

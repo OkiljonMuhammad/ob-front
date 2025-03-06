@@ -162,7 +162,7 @@ export default function Forms() {
               <tr>
                 <th>#</th>
                 <th>Name</th>
-                <th>Id</th>
+                <th>Form Id</th>
                 <th>Date</th>
                 <th>Actions</th>
               </tr>
@@ -173,7 +173,7 @@ export default function Forms() {
                   <td>{(pagination.page - 1) * 10 + index + 1}</td>
                   <td>{form.name}</td>
                   <td>{form.id}</td>
-                  <td>{new Date(form.createdAt).toLocaleDateString()}</td>
+                  <td>{new Date(form.createdAt).toLocaleDateString()} {new Date(form.createdAt).toLocaleTimeString()}</td>
                   <td>
                     <Button
                       variant="success"

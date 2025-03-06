@@ -150,8 +150,13 @@ export default function Users() {
     <>
       <Row className="mb-3">
         <Col>
-          <Button variant="primary" onClick={() => navigate('/admin/user/create')}>
+          <Button variant="success" onClick={() => navigate('/admin/user/create')}>
             Create User
+          </Button>
+        </Col>
+        <Col>
+          <Button variant="primary" onClick={() => navigate('/admin/salesforce/create')}>
+            Create User in SalesForce
           </Button>
         </Col>
         <Col xs="auto">
@@ -222,7 +227,7 @@ export default function Users() {
                   <td>{user.email}</td>
                   <td>{user.isBlocked ? "Blocked" : "Active"}</td>
                   <td>{user.role}</td> 
-                  <td>{new Date(user.createdAt).toLocaleDateString()}</td>
+                  <td>{new Date(user.createdAt).toLocaleDateString()} {new Date(user.createdAt).toLocaleTimeString()}</td>
                   <td>
                     <Button
                       variant="info"

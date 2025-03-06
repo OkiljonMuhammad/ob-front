@@ -25,6 +25,7 @@ import EditForm from './components/Form/EditForm';
 import Answers from './components/Answer/Answers';
 import CommentList from './components/Comment/CommentList';
 import FormAccessManagement from './components/FormAccess/FormAccessManagment';
+import CreateUserInSalesforce from './components/Admin/Users/CreateUserInSalesforce';
 import './App.css';
 
 function App() {
@@ -37,6 +38,14 @@ function App() {
             <Routes>
               <Route
                 path="/"
+                element={
+                  <Layout>
+                    <MainPage />
+                  </Layout>
+                }
+              />
+                <Route
+                path="/oauth/callback"
                 element={
                   <Layout>
                     <MainPage />
@@ -85,6 +94,16 @@ function App() {
                   <Layout>
                     <AdminRoute>
                       <CreateUser />
+                    </AdminRoute>
+                  </Layout>
+                }
+              />
+              <Route
+                path="/admin/salesforce/create"
+                element={
+                  <Layout>
+                    <AdminRoute>
+                      <CreateUserInSalesforce />
                     </AdminRoute>
                   </Layout>
                 }

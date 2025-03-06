@@ -8,6 +8,7 @@ import ViewTemplate from './ViewTemplate';
 import CreateForm from '../Form/CreateForm';
 import ViewAggregation from './ViewAggregation';
 import ThemeContext from '../../context/ThemeContext';
+import CreateApiToken from './CreateApiToken';
 
 export default function Templates() {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
@@ -30,6 +31,7 @@ export default function Templates() {
   const [showViewModal, setShowViewModal] = useState(false);
   const [showFormCreateModal, setShowFormCreateModal] = useState(false);
   const [showAggregationModal, setShowAggregationModal] = useState(false);
+  const [showCreateApiTokenModal, setShowCreateApiTokenModal] = useState(false);
   const [selectedTemplateId, setSelectedTemplateId] = useState(null);
 
   const handleTemplateDeleted = (deletedTemplateId) => {
@@ -48,6 +50,10 @@ export default function Templates() {
     setShowFormCreateModal(true);
   };
 
+  const handleCreateApiTokenClick = () => {
+    setShowCreateApiTokenModal(true);
+  };
+
   const handleAggregationClick = (templateId) => {
     setSelectedTemplateId(templateId);
     setShowAggregationModal(true);
@@ -62,6 +68,7 @@ export default function Templates() {
     setShowViewModal(false);
     setShowFormCreateModal(false);
     setShowAggregationModal(false);
+    setShowCreateApiTokenModal(false);
     setSelectedTemplateId(null);
   };
 
@@ -142,8 +149,13 @@ export default function Templates() {
     <>
       <Row className="mb-3">
         <Col>
-          <Button variant="primary" onClick={() => navigate('/templates/create')}>
+          <Button variant="success" onClick={() => navigate('/templates/create')}>
             Create Template
+          </Button>
+        </Col>
+        <Col>
+          <Button variant="primary" onClick={handleCreateApiTokenClick}>
+            Create Api Token
           </Button>
         </Col>
         <Col xs="auto">
@@ -199,8 +211,8 @@ export default function Templates() {
               <tr>
                 <th>#</th>
                 <th>Title</th>
-                <th>Date</th>
                 <th>Topic</th>
+                <th>Date</th>
                 <th>Actions</th>
               </tr>
             </thead>
@@ -209,8 +221,8 @@ export default function Templates() {
                 <tr key={template.id}>
                  <td>{(pagination.page - 1) * 10 + index + 1}</td>
                   <td>{template.title}</td>
-                  <td>{new Date(template.createdAt).toLocaleDateString()}</td>
                   <td>{template.Topic?.topicName || 'No Topic'}</td>
+                  <td>{new Date(template.createdAt).toLocaleDateString()} {new Date(template.createdAt).toLocaleTimeString()}</td>
                   <td>
                     <Button
                       variant="info"
@@ -315,6 +327,12 @@ export default function Templates() {
           templateId={selectedTemplateId}
           showModal={showAggregationModal}
           onClose={handleCloseModal}
+        />
+      )}
+       {showCreateApiTokenModal && (
+        <CreateApiToken
+          showModal={showCreateApiTokenModal} 
+          onClose={handleCloseModal} 
         />
       )}
     </>

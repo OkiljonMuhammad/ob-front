@@ -89,3 +89,9 @@
 .theme-dark .select__input-container {
   color: white !important;
 }
+
+.dropdown-menu {
+  background-color: inherit !important;
+  padding-top: 0 !important;
+  margin-top: 0 !important;
+}

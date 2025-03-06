@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Container, Tabs, Tab } from 'react-bootstrap';
 import Templates from '../Template/Templates';
 import Forms from '../Form/Forms';
+import GetTickets from '../JiraTicket/GetTickets';
 import { useParams, useNavigate } from 'react-router-dom';
 
 export default function Dashboard() {
@@ -29,6 +30,9 @@ export default function Dashboard() {
         </Tab>
         <Tab eventKey="forms" title="Forms">
           <Forms />
+        </Tab>
+        <Tab eventKey="tickets" title="Tickets">
+          <GetTickets />
         </Tab>
       </Tabs>
     </Container>
