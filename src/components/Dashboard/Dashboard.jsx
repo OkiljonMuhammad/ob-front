@@ -4,7 +4,7 @@ import Templates from '../Template/Templates';
 import Forms from '../Form/Forms';
 import GetTickets from '../JiraTicket/GetTickets';
 import { useParams, useNavigate } from 'react-router-dom';
-
+import Presentations from '../presentationComponents/Presentation/Presentations';
 export default function Dashboard() {
   const { tab } = useParams();
   const navigate = useNavigate();
@@ -30,6 +30,9 @@ export default function Dashboard() {
         </Tab>
         <Tab eventKey="forms" title="Forms">
           <Forms />
+        </Tab>
+        <Tab eventKey="presentations" title="Presentations">
+          <Presentations />
         </Tab>
         <Tab eventKey="tickets" title="Tickets">
           <GetTickets />

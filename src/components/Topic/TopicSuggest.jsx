@@ -1,11 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Dropdown, Button, Row, Col } from 'react-bootstrap';
 import axios from 'axios';
+import ThemeContext from '../../context/ThemeContext';
 
 const TopicSuggest = ({ onTopicSelect }) => {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [topics, setTopics] = useState([]);
   const [selectedTopic, setSelectedTopic] = useState(null);
+  const { theme } = useContext(ThemeContext); 
 
   const fetchTopics = async () => {
     try {
@@ -33,6 +35,8 @@ const TopicSuggest = ({ onTopicSelect }) => {
     setSelectedTopic(null);
   };
 
+  const getTextColorClass = () => (theme === 'light' ? 'text-dark' : 'text-white');
+
   return (
     <div>
       <Row>
@@ -41,15 +45,20 @@ const TopicSuggest = ({ onTopicSelect }) => {
            <Dropdown.Toggle variant="primary" id="dropdown-basic">
              {selectedTopic ? selectedTopic.topicName : 'Select a topic'}
            </Dropdown.Toggle>
-           <Dropdown.Menu>
+           <Dropdown.Menu className={`bg-${theme} ${getTextColorClass()}`}>
              {topics.length > 0 ? (
                topics.map((topic) => (
-                 <Dropdown.Item key={topic.id} onClick={() => handleTopicSelect(topic)}>
-                   {topic.topicName}
+                 <Dropdown.Item 
+                 key={topic.id} 
+                 onClick={() => handleTopicSelect(topic)}
+                 className={`bg-${theme} ${getTextColorClass()}`}>
+                  {topic.topicName}
                  </Dropdown.Item>
                ))
              ) : (
-               <Dropdown.Item disabled>No topics available</Dropdown.Item>
+               <Dropdown.Item 
+               disabled
+               className={`bg-${theme} ${getTextColorClass()}`}>No topics available</Dropdown.Item>
              )}
            </Dropdown.Menu>
          </Dropdown>

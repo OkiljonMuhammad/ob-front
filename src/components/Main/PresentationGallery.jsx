@@ -2,20 +2,22 @@ import React, { useState, useEffect, useCallback, useContext } from 'react';
 import { Button, Row, Col, Pagination, Form, Card, InputGroup, Container } from 'react-bootstrap';
 import axios from 'axios';
 import { debounce } from 'lodash';
-import ViewTemplate from '../Template/ViewTemplate';
+import ThemeContainer from '../Layout/ThemeContainer';
 import ThemeContext from '../../context/ThemeContext';
 import { useTranslation } from 'react-i18next';
 import { useNavigate } from 'react-router-dom';
+import JoinPresentation from '../../components/presentationComponents/Presentation/JoinPresentation';
+import { encryptData } from '../../utils/authUtils';
 
-const TemplateGallery = ({ selectedTagId: tagId }) => {
+const PresentationGallery = () => {
   const { theme } = useContext(ThemeContext);
   const navigate = useNavigate();
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
-  const [templates, setTemplates] = useState([]);
-  const [topics, setTopics] = useState([]);
+  const [presentations, setPresentations] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
-  const [selectedTopic, setSelectedTopic] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showJoinModal, setShowJoinModal] = useState(false);
+  const [selectedPresentationId, setSelectPresentationateId] = useState(null);
   const [pagination, setPagination] = useState({
     total: 0,
     page: 1,
@@ -23,29 +25,17 @@ const TemplateGallery = ({ selectedTagId: tagId }) => {
     prevPage: null,
     nextPage: null,
   });
-  const [showViewModal, setShowViewModal] = useState(false);
-  const [selectedTemplateId, setSelectedTemplateId] = useState(null);
   const { t } = useTranslation();
 
-  const handleViewClick = (templateId) => {
-    setSelectedTemplateId(templateId);
-    setShowViewModal(true);
-  };
-
-  const handleCloseModal = () => {
-    setShowViewModal(false);
-    setSelectedTemplateId(null);
-  };
-
-  const fetchTemplates = async (page = 1, limit = 6, tagId = null, topic = '', search = '') => {
+  const fetchPresentations = async (page = 1, limit = 6, search = '') => {
     try {
       setLoading(true);
       const token = localStorage.getItem('token');
-      const response = await axios.get(`${BASE_URL}/api/template/templates/public`, {
-        params: { page, limit, tagId, topic, search },
+      const response = await axios.get(`${BASE_URL}/api/presentation/presentations/public`, {
+        params: { page, limit, search },
         headers: { Authorization: `Bearer ${token}` },
       });
-      setTemplates(response.data?.templates || []);
+      setPresentations(response.data?.presentations || []);
       setPagination(response.data?.pagination || {
         total: 0,
         page: 1,
@@ -54,71 +44,66 @@ const TemplateGallery = ({ selectedTagId: tagId }) => {
         nextPage: null,
       });
     } catch (error) {
-      console.error('Error fetching templates:', error);
+      console.error('Error fetching presentations:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchTopics = async () => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${BASE_URL}/api/topic/topics`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-      setTopics(response.data?.topics || []);
-    } catch (error) {
-      console.error('Error fetching topics:', error);
-    }
-  };
-
-  const debouncedFetchTemplates = useCallback(
-    debounce((query, topic, tagId) => {
-      fetchTemplates(1, 6, tagId, topic, query);
+  const debouncedFetchPresentations = useCallback(
+    debounce((query) => {
+      fetchPresentations(1, 6, query);
     }, 500),
     []
   );
 
   useEffect(() => {
-    debouncedFetchTemplates(searchQuery, selectedTopic, tagId);
-    return () => debouncedFetchTemplates.cancel();
-  }, [searchQuery, selectedTopic, tagId, debouncedFetchTemplates]);
-
-  useEffect(() => {
-    fetchTopics();
-  }, []);
+    debouncedFetchPresentations(searchQuery);
+    return () => debouncedFetchPresentations.cancel();
+  }, [searchQuery, debouncedFetchPresentations]);
 
   const handleSearchChange = (e) => {
     setSearchQuery(e.target.value);
   };
 
-  const handleClearSearch = () => {
-    setSearchQuery('');
-    fetchTemplates(1, 6, tagId, selectedTopic, '');
+  const encryptedUrl = (presentationId) => {
+    const encryptedText = encryptData(`${presentationId}`);
+    return encodeURIComponent(encryptedText);
   };
 
-  const handleTopicChange = (e) => {
-    setSelectedTopic(e.target.value);
+  const handleClearSearch = () => {
+    setSearchQuery('');
+    fetchPresentations(1, 6, '');
   };
 
   const handlePageChange = (newPage) => {
-    fetchTemplates(newPage, 6, tagId, selectedTopic, searchQuery);
+    fetchPresentations(newPage, 6, searchQuery);
+  };
+
+  const handleJoinClick = (presentationId) => {
+    setSelectPresentationateId(presentationId);
+    setShowJoinModal(true);
+  };
+
+  const handleCloseModal = () => {
+    setShowJoinModal(false);
+    setSelectPresentationateId(null);
   };
 
   const getTextColorClass = () => (theme === 'light' ? 'text-dark' : 'text-white');
 
   return (
     <>
-    <Container>
+    <Container className='min-vh-100'>
       <Row className="mb-3 justify-content-center text-center">
         <Col xs={12} md={4} lg={3}>
           <Form.Group controlId="searchInput">
-            <Form.Label>{t('searchTemplates')}</Form.Label>
+            <Form.Label>{t('searchPresentations')}</Form.Label>
             <InputGroup>
               <Form.Control
                 type="text"
                 className={`bg-${theme} ${getTextColorClass()} custom-placeholder`}
-                placeholder={t('EnterTemplateTitle')}
+                placeholder={t('EnterPresentationTitle')}
                 value={searchQuery}
                 onChange={handleSearchChange}
               />
@@ -130,56 +115,40 @@ const TemplateGallery = ({ selectedTagId: tagId }) => {
             </InputGroup>
           </Form.Group>
         </Col>
-        <Col xs={12} md={4} lg={3}>
-          <Form.Group controlId="topicFilter">
-            <Form.Label>{t('FilterByTopic')}</Form.Label>
-            <Form.Select 
-            value={selectedTopic} 
-            onChange={handleTopicChange}
-            className={`bg-${theme} ${getTextColorClass()}`}>
-              <option value="">{topics.length === 0 ? t('noTopic') : t('allTopics') }</option>
-              {topics.map((topic) => (
-                <option key={topic.id} value={topic.topicName}>
-                  {topic.topicName}
-                </option>
-              ))}
-            </Form.Select>
-          </Form.Group>
-        </Col>
       </Row>
       {loading ? (
         <>
         <div className="spinner-grow text-primary"></div>
-        <p className="text-center">{t('loadingTemplate')}</p>
+        <p className="text-center">{t('loadingPresentation')}</p>
         </>
-      ) : templates.length === 0 ? (
-        <p className="text-center">{t('noTemplatesFound')}</p>
+      ) : presentations.length === 0 ? (
+        <p className="text-center">{t('noPresentationsFound')}</p>
       ) : (
         <>
           <Row xs={1} md={3} className="g-4">
-            {templates.map((template) => (
-              <Col key={template.id}>
+            {presentations.map((presentation) => (
+              <Col key={presentation.id}>
                 <Card className={`bg-${theme} ${getTextColorClass()}`}>
                   <Card.Body>
-                    <Card.Title>{t('title')}: {template.title}</Card.Title>
-                    <Card.Text>{t('topic')}: {template.Topic?.topicName || 'No Topic'}</Card.Text>
-                    <Card.Text>{t('author')}: {template.User?.username || 'No User'}</Card.Text>
+                    <Card.Title>{t('title')}: {presentation.title}</Card.Title>
                     <Button
                       variant="info"
                       size="sm"
                       className="me-2"
-                      onClick={() => handleViewClick(template.id)}
-                    >
-                      {t('viewTemplate')}
+                      onClick={() => {
+                        const encryptedText = encryptedUrl(presentation.id);
+                        navigate(`/presentation/view/${encryptedText}`);
+                      }}>
+                      {t('view')}
                     </Button>
                      <Button
                       variant="primary"
                       size="sm"
                       className="me-2"
 
-                      onClick={() => navigate(`/comments/${template.id}`)}
+                      onClick={() => handleJoinClick(presentation.id)}
                     >
-                      Comments
+                      Join
                     </Button>
                   </Card.Body>
                 </Card>
@@ -219,11 +188,11 @@ const TemplateGallery = ({ selectedTagId: tagId }) => {
       )}
         </>
       )}
-      {showViewModal && (
-        <ViewTemplate
-          showModal={showViewModal}
-          onClose={handleCloseModal}
-          templateId={selectedTemplateId}
+       {showJoinModal && (
+        <JoinPresentation
+          presentationId={selectedPresentationId} 
+          showModal={showJoinModal} 
+          onClose={handleCloseModal} 
         />
       )}
     </Container>
@@ -231,4 +200,4 @@ const TemplateGallery = ({ selectedTagId: tagId }) => {
   );
 };
 
-export default TemplateGallery;
+export default PresentationGallery;

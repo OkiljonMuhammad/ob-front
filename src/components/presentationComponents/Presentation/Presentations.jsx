@@ -1,18 +1,16 @@
 import React, { useState, useEffect, useCallback, useContext } from 'react';
-import { Table, Button, Row, Col, Pagination, Form, InputGroup } from 'react-bootstrap';
+import { Table, Button, Row, Col, Pagination, Form, InputGroup, Container } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { debounce } from 'lodash';
-import DeleteForm from './DeleteForm';
-import ViewTemplate from '../Template/ViewTemplate';
-import CreateForm from './CreateForm';
-import UseForm from './UseForm';
-import { encryptData } from '../../utils/authUtils';
-import ThemeContext from '../../context/ThemeContext';
+import ThemeContext from '../../../context/ThemeContext';
+import DeletePresentation from './deletePresentation';
+import SharePresentation from './SharePresentation';
+import { encryptData } from '../../../utils/authUtils';
 
-export default function Forms() {
+export default function Presentations() {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
-  const [forms, setForms] = useState([]);
+  const [presentations, setPresentations] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [pagination, setPagination] = useState({
     total: 0,
@@ -23,47 +21,42 @@ export default function Forms() {
   });
   
   const [loading, setLoading] = useState(true);
+  const { theme } = useContext(ThemeContext);
   const navigate = useNavigate();
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [showViewModal, setShowViewModal] = useState(false);
-  const [showFormCreateModal, setShowFormCreateModal] = useState(false);
-  const [showUseFormModal, setShowUseFormModal] = useState(false);
-  const [selectedFormId, setSelectedFormId] = useState(null);
-  const [reload, setReload] = useState(false);
-  const { theme } = useContext(ThemeContext); 
+  const [showShareModal, setShowShareModal] = useState(false);
+  const [selectedPresentationId, setSelectPresentationateId] = useState(null);
 
-  const encryptedUrl = (form) => {
-    const encryptedText = encryptData(`${form.id}/${form.templateId}`);
-    return encodeURIComponent(encryptedText);
-  };
+  const encryptedUrl = (presentationId) => {
+      const encryptedText = encryptData(`${presentationId}`);
+      return encodeURIComponent(encryptedText);
+    };
 
-  const handleFormDeleted = (deletedFormId) => {
-    setForms((prevForms) =>
-      prevForms.filter((form) => form.id !== deletedFormId)
+  const handlePresentationDeleted = (deletedPresentationId) => {
+    setPresentations((prevPresentations) =>
+      prevPresentations.filter((presentation) => presentation.id !== deletedPresentationId)
     );
   };
-  const handleDeleteClick = (formId) => {
-    setSelectedFormId(formId);
+  
+  const handleDeleteClick = (presentationId) => {
+    setSelectPresentationateId(presentationId);
     setShowDeleteModal(true);
-  };
-
-  const handleUseFormClick = (form) => {
-    setSelectedFormId(form);
-    setShowUseFormModal(true);
   };
 
   const handleCloseModal = () => {
     setShowDeleteModal(false);
-    setShowViewModal(false);
-    setShowFormCreateModal(false);
-    setShowUseFormModal(false);
-    setSelectedFormId(null);
+    setShowShareModal(false);
+    setSelectPresentationateId(null);
   };
 
-  const fetchForms = async (page = 1, limit = 10, search = '') => {
+  const handleShareClick = (presentationId) => {
+    setSelectPresentationateId(presentationId);
+    setShowShareModal(true);
+  };
+  const fetchPresentations = async (page = 1, limit = 10, search = '') => {
     try {
       setLoading(true);
-      const response = await axios.get(`${BASE_URL}/api/form/forms`, {
+      const response = await axios.get(`${BASE_URL}/api/presentation/presentations`, {
         params: { page, limit, search },
         headers: {
           Authorization: `Bearer ${localStorage.getItem('token')}`,
@@ -71,8 +64,8 @@ export default function Forms() {
       });
 
       if (response.data) {
-        setForms(response.data.forms || []);
-        setPagination(response.data.pagination || {
+        setPresentations(response.data?.presentations || []);
+        setPagination(response.data?.pagination || {
           total: 0,
           page: 1,
           totalPages: 1,
@@ -81,25 +74,25 @@ export default function Forms() {
         });
       }
     } catch (error) {
-      console.error('Error fetching forms:', error);
+      console.error('Error fetching presentations:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const debouncedFetchForms = useCallback(
+  const debouncedFetchPresentations = useCallback(
     debounce((query) => {
-      fetchForms(1, 10, query);
+      fetchPresentations(1, 10, query);
     }, 300),
     []
   );
 
   useEffect(() => {
-    debouncedFetchForms(searchQuery);
-  }, [searchQuery, reload]);
+    debouncedFetchPresentations(searchQuery);
+  }, [searchQuery]);
 
   const handlePageChange = (newPage) => {
-    fetchForms(newPage, 10, searchQuery);
+    fetchPresentations(newPage, 10, searchQuery);
   };
 
   const handleSearchChange = (e) => {
@@ -108,30 +101,26 @@ export default function Forms() {
 
   const handleClearSearch = () => {
     setSearchQuery('');
+    debouncedFetchPresentations('');
   };
-
+  
   const getTextColorClass = () => (theme === 'light' ? 'text-dark' : 'text-white');
 
   return (
-    <>
+    <Container className='min-vh-100'>
       <Row className="mb-3">
         <Col>
-          <Button variant="primary" onClick={() => navigate('/templates/create')}>
-            Create Form
-          </Button>
-        </Col>
-        <Col>
-          <Button variant="success" onClick={() => setReload(!reload)}>
-            Reload
+          <Button variant="success" onClick={() => navigate('/presentation/create')}>
+            Create Presentation
           </Button>
         </Col>
         <Col xs="auto">
         <Form.Group controlId="searchInput">
-            <Form.Label>Search Forms</Form.Label>
+            <Form.Label>Search Presentations</Form.Label>
             <InputGroup>
               <Form.Control
                 type="text"
-                placeholder="Enter form name..."
+                placeholder="Enter template title..."
                 value={searchQuery}
                 onChange={handleSearchChange}
                 className={`bg-${theme} ${getTextColorClass()} custom-placeholder`}
@@ -150,38 +139,36 @@ export default function Forms() {
          <div className="d-flex justify-content-center text-center">
          <div>
            <div className="spinner-grow text-primary"></div>
-           <p>Loading forms...</p>
+           <p>Loading presentations...</p>
          </div>
        </div>
-      ) : forms.length === 0 ? (
-      <p className="text-center">No Forms</p>
+      ) : presentations.length === 0 ? (
+      <p className="text-center">No Presentation</p>
       ) :(
         <>
-          <Table striped bordered hover responsive className={`text-center table-${theme}`}>
-            <thead>
+          <Table striped bordered hover responsive className={`text-center table-${theme}`} >
+            <thead >
               <tr>
                 <th>#</th>
-                <th>Name</th>
-                <th>Form Id</th>
+                <th>Title</th>
                 <th>Date</th>
                 <th>Actions</th>
               </tr>
             </thead>
             <tbody>
-              {forms.map((form, index) => (
-                <tr key={form.id}>
-                  <td>{(pagination.page - 1) * 10 + index + 1}</td>
-                  <td>{form.name}</td>
-                  <td>{form.id}</td>
-                  <td>{new Date(form.createdAt).toLocaleDateString()} {new Date(form.createdAt).toLocaleTimeString()}</td>
+              {presentations.map((presentation, index) => (
+                <tr key={presentation.id}>
+                 <td>{(pagination.page - 1) * 10 + index + 1}</td>
+                  <td>{presentation.title}</td>
+                  <td>{new Date(presentation.createdAt).toLocaleDateString()} {new Date(presentation.createdAt).toLocaleTimeString()}</td>
                   <td>
                     <Button
-                      variant="success"
+                      variant="info"
                       size="sm"
                       className="me-2"
                       onClick={() => {
-                        const encryptedText = encryptedUrl(form);
-                        navigate(`/form/submit/${encryptedText}`);
+                        const encryptedText = encryptedUrl(presentation.id);
+                        navigate(`/presentation/view/${encryptedText}`);
                       }}
                     >
                       View
@@ -190,47 +177,40 @@ export default function Forms() {
                       variant="warning"
                       size="sm"
                       className="me-2"
-                      onClick={() => navigate(`/form/edit/${form.templateId}`)}
+                      onClick={() => navigate(`/presentation/update/${presentation.id}`)}
                     >
-                      Edit
+                      Update
                     </Button>
                     <Button
                       variant="danger"
                       size="sm"
                       className="me-2"
-                      onClick={() => handleDeleteClick(form.id)}
+                      onClick={() => handleDeleteClick(presentation.id)}
                     >
                       Delete
                     </Button>
                     <Button
-                      variant="primary"
-                      className="me-2"
+                      variant="success"
                       size="sm"
-                      onClick={() => handleUseFormClick(form)}
+                      className="me-2"
+                      onClick={() => handleShareClick(presentation.id)}
                     >
                       Share
                     </Button>
                     <Button
-                      variant="info"
+                      variant="primary"
                       size="sm"
                       className="me-2"
-                      onClick={() => navigate(`/answers/${form.id}/${form.name}`)}
+                      onClick={() => navigate(`/presentation/participants/${presentation.id}`)}
                     >
-                      View Answers
-                    </Button>
-                    <Button
-                      variant="secondary"
-                      size="sm"
-                      onClick={() => navigate(`/form/access/${form.id}`)}
-                    >
-                      Access
+                      Participants
                     </Button>
                   </td>
                 </tr>
               ))}
             </tbody>
           </Table>
-
+          
           <div className="d-flex justify-content-center">
           <Pagination>
             {pagination.prevPage && (
@@ -253,34 +233,20 @@ export default function Forms() {
         </>
       )}
        {showDeleteModal && (
-        <DeleteForm
-          formId={selectedFormId} 
+        <DeletePresentation
+          presentationId={selectedPresentationId} 
           showModal={showDeleteModal} 
           onClose={handleCloseModal} 
-          onFormDeleted={handleFormDeleted}
+          onPresentationDeleted={handlePresentationDeleted}
         />
       )}
-      {showViewModal && (
-        <ViewTemplate
-          templateId={selectedFormId}
-          showModal={showViewModal}
-          onClose={handleCloseModal}
-        />
-      )}
-       {showFormCreateModal && (
-        <CreateForm
-          templateId={selectedFormId}
-          showModal={showFormCreateModal} 
+        {showShareModal && (
+        <SharePresentation
+          presentationId={selectedPresentationId} 
+          showModal={showShareModal} 
           onClose={handleCloseModal} 
         />
       )}
-      {showUseFormModal && (
-        <UseForm
-          form={selectedFormId}
-          showModal={showUseFormModal} 
-          onClose={handleCloseModal} 
-        />
-      )}
-    </>
+    </Container>
   );
 }
