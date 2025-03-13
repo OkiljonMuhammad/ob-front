@@ -1,18 +1,42 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef, useContext } from "react";
 import axios from "axios";
-import { Container, Form, Button, Row, Col, Card, Spinner } from "react-bootstrap";
+import { Container, Form, Button, Row, Col, Card, Spinner, ListGroup } from "react-bootstrap";
 import { toast } from "react-toastify";
 import { useNavigate, useParams } from "react-router-dom";
 import { Rnd } from "react-rnd";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
+import { io } from "socket.io-client";
+import { username } from "../../../context/AuthContext";
+import { decryptData } from "../../../utils/authUtils";
+import { encryptData } from '../../../utils/authUtils';
+import ThemeContext from '../../../context/ThemeContext';
 
 const UpdatePresentation = () => {
   const [title, setTitle] = useState("");
   const [slides, setSlides] = useState([]);
   const [loading, setLoading] = useState(true);
-  const { presentationId } = useParams();
+  const [participants, setParticipants] = useState([]);
   const navigate = useNavigate();
+  const { theme } = useContext(ThemeContext);
+  const socket = useRef(null);
+  const { encryptedData } = useParams();
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
+  const [userData, setUserData] = useState({})
+  const [selectedSlideIndex, setSelectedSlideIndex] = useState(0);
+
+  let presentationId;
+  try {
+    presentationId = decryptData(encryptedData);
+  } catch (error) {
+    console.error("Failed to decrypt data:", error);
+    return <h3>Invalid presentation data</h3>;
+  }
+  
+  useEffect(() => {
+    if (slides.length > 0 && selectedSlideIndex >= slides.length) {
+      setSelectedSlideIndex(slides.length - 1);
+    }
+  }, [slides.length]);
 
   useEffect(() => {
     const fetchPresentation = async () => {
@@ -22,7 +46,6 @@ const UpdatePresentation = () => {
         });
         setTitle(response.data?.presentation.title);
         setSlides(response.data?.presentation?.Slides);
-        console.log(response.data?.presentation?.Slides);
       } catch (error) {
         toast.error("Failed to load presentation");
         console.error("Error fetching presentation:", error);
@@ -30,34 +53,109 @@ const UpdatePresentation = () => {
         setLoading(false);
       }
     };
+
+    const fetchUserData = async () => {
+      try {
+        const response = await axios.get(`${BASE_URL}/api/participant/get/${presentationId}`, {
+          headers: { Authorization: `Bearer ${localStorage.getItem("token")}` },
+        });
+        setUserData(response.data?.participant);
+      } catch (error) {
+        toast.error("Failed to get user data");
+        console.error("Error fetching user data:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchUserData();
     fetchPresentation();
   }, [presentationId]);
 
   const handleUpdatePresentation = async () => {
+    if (userData.role === 'Viewer') {
+      return;
+    };
     try {
-      console.log(slides);
       await axios.put(
         `${BASE_URL}/api/presentation/${presentationId}`,
         { title, slides },
         { headers: { Authorization: `Bearer ${localStorage.getItem("token")}` } }
       );
-      toast.success("Presentation updated successfully");
-      navigate(-1);
     } catch (error) {
       toast.error("Failed to update presentation");
       console.error("Error updating presentation:", error);
     }
   };
 
+  useEffect(() => {
+    if (userData.role !== 'Viewer') {
+      const saveTimeout = setTimeout(() => {
+        handleUpdatePresentation();
+      }, 1000);
+  
+      return () => clearTimeout(saveTimeout);
+    }
+  }, [title, slides]);
+  
+  useEffect(() => {
+    socket.current = io(BASE_URL);
+    socket.current.emit("join_presentation", {
+      presentationId,
+      username: username(),
+    });
+    socket.current.on("participant_update", (participantList) => {
+      setParticipants(participantList);
+    });
+
+    socket.current.on("presentation_updated", (updatedSlides) => {
+      setSlides(updatedSlides);
+    });
+
+    socket.current.on("slide_updated", (updatedSlides) => {
+      setSlides(updatedSlides);
+    });
+
+    socket.current.on("title_updated", (newTitle) => {
+      setTitle(newTitle);
+    });
+
+    return () => {
+      socket.current.disconnect();
+    };
+  }, [presentationId]);
+
+  const encryptedUrl = (presentationId) => {
+    const encryptedText = encryptData(`${presentationId}`);
+    return encodeURIComponent(encryptedText);
+  };
+
   const handleAddSlide = () => {
-    setSlides([...slides, { TextBlocks: [] }]);
+    if (userData.role === 'Viewer' || userData.role === 'Editor') {
+      return;
+    };
+    setSlides((prevSlides) => {
+      const newSlides = [...prevSlides, { TextBlocks: [] }];
+      socket.current.emit("presentation_updated", newSlides);
+      return newSlides;
+    });
   };
 
   const handleRemoveSlide = (index) => {
-    setSlides(slides.filter((_, i) => i !== index));
+    if (userData.role === 'Viewer' || userData.role === 'Editor' || slides.length == 1) {
+      return;
+    };
+    setSlides((prevSlides) => {
+      const newSlides = prevSlides.filter((_, i) => i !== index);
+      socket.current.emit("presentation_updated", newSlides);
+      return newSlides;
+    });
   };
 
   const handleAddTextBlock = (slideIndex) => {
+    if (userData.role === 'Viewer') {
+      return;
+    };
     setSlides((prevSlides) => {
       const newSlides = [...prevSlides];
       newSlides[slideIndex].TextBlocks.push({
@@ -67,23 +165,31 @@ const UpdatePresentation = () => {
         width: 300,
         height: 100,
       });
+      socket.current.emit("slide_updated", newSlides);
       return newSlides;
     });
   };
 
   const handleRemoveTextBlock = (slideIndex, textIndex) => {
+    if (userData.role === 'Viewer') {
+      return;
+    };
     setSlides((prevSlides) => {
       const newSlides = prevSlides.map((slide, i) =>
         i === slideIndex
           ? { ...slide, TextBlocks: slide.TextBlocks.filter((_, j) => j !== textIndex) }
           : slide
       );
+      socket.current.emit("slide_updated", newSlides);
       return newSlides;
     });
   };
 
 
   const handleTextChange = (slideIndex, textIndex, value) => {
+    if (userData.role === 'Viewer') {
+      return;
+    };
     setSlides((prevSlides) => {
       const newSlides = prevSlides.map((slide, i) => 
         i === slideIndex 
@@ -95,13 +201,17 @@ const UpdatePresentation = () => {
             } 
           : slide
       );
+      socket.current.emit("slide_updated", newSlides);
       return newSlides;
     });
   };
 
   const handleTextBlockDrag = (slideIndex, textIndex, newX, newY) => {
-    setSlides((prevSlides) =>
-      prevSlides.map((slide, i) =>
+    if (userData.role === 'Viewer') {
+      return;
+    };
+    setSlides((prevSlides) => {
+      const newSlides = prevSlides.map((slide, i) =>
         i === slideIndex
           ? {
               ...slide,
@@ -110,16 +220,22 @@ const UpdatePresentation = () => {
               ),
             }
           : slide
-      )
-    );
+      );
+  
+      socket.current.emit("slide_updated", newSlides);
+      return newSlides;
+    });
   };
 
   const handleTextBlockResize = (slideIndex, textIndex, newWidthStr, newHeightStr, newX, newY) => {
+    if (userData.role === 'Viewer') {
+      return;
+    };
     const newWidth = parseInt(newWidthStr, 10);
     const newHeight = parseInt(newHeightStr, 10);
 
-    setSlides((prevSlides) =>
-      prevSlides.map((slide, i) =>
+    setSlides((prevSlides) => {
+      const newSlides = prevSlides.map((slide, i) =>
         i === slideIndex
           ? {
               ...slide,
@@ -129,124 +245,114 @@ const UpdatePresentation = () => {
             }
           : slide
       )
-    );
+      socket.current.emit("slide_updated", newSlides);
+      return newSlides;
+    });
   };
 
   const onDragEnd = (result) => {
+    if (userData.role === 'Viewer') {
+      return;
+    };
     if (!result.destination) return;
-    const reorderedSlides = [...slides];
-    const [movedSlide] = reorderedSlides.splice(result.source.index, 1);
-    reorderedSlides.splice(result.destination.index, 0, movedSlide);
-    setSlides(reorderedSlides);
+    const newSlides = [...slides];
+    const [movedSlide] = newSlides.splice(result.source.index, 1);
+    newSlides.splice(result.destination.index, 0, movedSlide);
+    setSlides(newSlides);
+    socket.current.emit("presentation_updated", newSlides);
+    return newSlides;
+  };
+
+  const changeTitle = (event) => {
+    if (userData.role === 'Viewer') {
+      return;
+    };
+    const newTitle = event.target.value;
+    setTitle(event.target.value);
+    socket.current.emit("title_updated", newTitle);
+    return newTitle;
   };
 
   if (loading) {
     return <Spinner animation="border" className="d-block mx-auto mt-5" />;
   }
 
+  const getTextColorClass = () => (theme === 'light' ? 'text-dark' : 'text-white');
+
   return (
-    <Container className="mt-4 min-vh-100">
-      <Card className="p-4 shadow">
-        <h2 className="text-center mb-4">Update Presentation</h2>
-        <Form>
-          <Form.Group className="mb-3">
-            <Form.Label>Title</Form.Label>
-            <Form.Control type="text" value={title} onChange={(e) => setTitle(e.target.value)} />
-          </Form.Group>
+    <Container fluid className="mt-4 min-vh-100">
+      <Row className="g-4">
+        {/* Left Column - Slide Thumbnails */}
+        <Col md={2} className="border-end">
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h5>Slides</h5>
+            <Button variant="primary" size="sm" onClick={handleAddSlide}>
+            <i className="bi bi-plus-lg"></i>
+            </Button>
+          </div>
           <DragDropContext onDragEnd={onDragEnd}>
             <Droppable droppableId="slides">
               {(provided) => (
-                <div {...provided.droppableProps} ref={provided.innerRef}>
+                <div 
+                  {...provided.droppableProps} 
+                  ref={provided.innerRef}
+                  style={{ overflowY: 'auto', maxHeight: '90vh' }}
+                >
                   {slides?.map((slide, slideIndex) => (
                     <Draggable key={String(slideIndex)} draggableId={String(slideIndex)} index={slideIndex}>
                       {(provided) => (
-                        <Card 
-                        ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} 
-                        className="mb-3 p-3" style={{minHeight: '400px',  ...provided.draggableProps.style,}}>
-                          <div className="d-flex justify-content-between align-items-center">
-                            <h5>Slide {slideIndex + 1} {slide?.textBlocks}</h5>
-                            <Button 
-                            variant="danger" 
-                            size="sm" 
-                            onClick={() => handleRemoveSlide(slideIndex)}
-                            style={{ position: "absolute",
-                              top: "5px",
-                              right: "5px",
-                              border: "none",
-                              background: "transparent",
-                              color: "red",
-                              fontSize: "1rem",
-                              cursor: "pointer",}}
-                            >✖</Button>
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          className={`slide-container mb-2 p-2 border ${selectedSlideIndex === slideIndex ? 'border-primary' : ''}`}
+                          style={{
+                            ...provided.draggableProps.style,
+                            transform: provided.draggableProps.style?.transform,
+                            cursor: 'pointer',
+                            aspectRatio: '4/1',
+                            background: 'white'
+                          }}
+                          onClick={() => setSelectedSlideIndex(slideIndex)}
+                        >
+                          <div style={{ transform: 'scale(0.22)', transformOrigin: '0 0', width: '320%', height: '320%' }}>
+                            {slide.TextBlocks?.map((block, textIndex) => (
+                              <div
+                                key={textIndex}
+                                style={{
+                                  position: 'absolute',
+                                  left: block.x,
+                                  top: block.y,
+                                  width: block.width,
+                                  height: block.height,
+                                  border: '1px solid #ddd',
+                                  fontSize: '17px',
+                                  whiteSpace: 'normal',
+                                  wordWrap: 'break-word',
+                                  overflow: 'hidden',
+
+                                }}
+                                className={`${theme === 'dark' ? 'text-dark' : 'text-dark'}`}
+                              >
+                                {block.content}
+                              </div>
+                            ))}
                           </div>
-                          {slide.TextBlocks?.map((block, textIndex) => (
-                            <Rnd
-                              key={textIndex}
-                              position={{ x: block.x, y: block.y }}
-                              size={{ width: block.width, height: block.height }}
-                              onDragStop={(e, d) => handleTextBlockDrag(slideIndex, textIndex, d.x, d.y)}
-                              onResizeStop={(e, direction, ref, delta, position) =>
-                              handleTextBlockResize(
-                                slideIndex,
-                                textIndex,
-                                ref.style.width,
-                                ref.style.height,
-                                position.x,
-                                position.y
-                              )
-                            }
-                            bounds="parent"
-                            enableResizing={{
-                              bottom: true,
-                              bottomLeft: true,
-                              bottomRight: true,
-                              left: true,
-                              right: true,
-                              top: true,
-                              topLeft: true,
-                              topRight: true,
-                            }}
-                            style={{ border: "1px solid #ced4da", borderRadius: "0.25rem" }}
-                          >
-                            <Col xs="auto">
-                              <Button 
-                              variant="danger" 
-                              size="sm" 
-                              onClick={() => handleRemoveTextBlock(slideIndex, textIndex)}
-                              style={{
-                                position: "absolute",
-                                top: "-30px",
-                                right: "-30px",
-                                border: "none",
-                                background: "transparent",
-                                color: "red",
-                                fontSize: "1rem",
-                                cursor: "pointer",
-                              }}>
-                                ✖
-                                </Button>
-                            </Col>
-                            <Form.Control
-                              as="textarea"
-                              value={block.content}
-                              onChange={(e) => handleTextChange(slideIndex, textIndex, e.target.value)}
-                              placeholder="Enter text block content"
-                              style={{
-                                width: "100%",
-                                height: "100%",
-                                border: "none",
-                                resize: "none",
-                                padding: "0.375rem 0.75rem",
+                            <Button
+                              variant="danger"
+                              size="sm"
+                              className="delete-slide-button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveSlide(slideIndex);
                               }}
-                              />
-                            </Rnd>
-                          ))}
-                          <Col className="ms-auto">
-                            <Button variant="outline-primary" size="sm" onClick={() => handleAddTextBlock(slideIndex)}>
-                              Add Text Block
+                            >
+                            <i className="bi bi-x-lg"></i>
                             </Button>
-                          </Col>
-                        </Card>
+                          <div className={`${theme === 'dark' ? 'text-dark' : 'text-dark'} position-absolute top-0 start-0 m-1`}>
+                            {slideIndex + 1}
+                          </div>
+                        </div>
                       )}
                     </Draggable>
                   ))}
@@ -255,16 +361,118 @@ const UpdatePresentation = () => {
               )}
             </Droppable>
           </DragDropContext>
-          <Row className="mt-3">
-            <Col>
-              <Button variant="secondary" onClick={handleAddSlide}>Add Slide</Button>
-            </Col>
-            <Col className="text-end">
-              <Button variant="primary" onClick={handleUpdatePresentation}>Update Presentation</Button>
-            </Col>
-          </Row>
-        </Form>
-      </Card>
+        </Col>
+
+        {/* Middle Column - Editable Slide */}
+        <Col md={8} className="border-end">
+          <Card className="p-3 shadow" style={{ aspectRatio: '16/9', background: 'white' }}>
+            <div className="h-100">
+              {slides[selectedSlideIndex]?.TextBlocks?.map((block, textIndex) => (
+                <Rnd
+                  className="block-container"
+                  key={textIndex}
+                  position={{ x: block.x, y: block.y }}
+                  size={{ width: block.width, height: block.height }}
+                  onDragStop={(e, d) => handleTextBlockDrag(selectedSlideIndex, textIndex, d.x, d.y)}
+                  onResizeStop={(e, direction, ref, delta, position) =>
+                    handleTextBlockResize(
+                      selectedSlideIndex,
+                      textIndex,
+                      ref.style.width,
+                      ref.style.height,
+                      position.x,
+                      position.y
+                    )
+                  }
+                  bounds="parent"
+                  enableResizing={{
+                    bottom: true,
+                    bottomLeft: true,
+                    bottomRight: true,
+                    left: true,
+                    right: true,
+                    top: true,
+                    topLeft: true,
+                    topRight: true,
+                  }}
+                  style={{ border: "1px solid #ced4da", borderRadius: "0.25rem" }}
+                >
+                    <Button 
+                      variant="danger" 
+                      size="sm" 
+                      className="delete-block-button"
+                      onClick={() => handleRemoveTextBlock(selectedSlideIndex, textIndex)}
+                    >
+                    <i className="bi bi-x-lg"></i>
+                    </Button>
+                  <Form.Control
+                    as="textarea"
+                    value={block.content}
+                    onChange={(e) => handleTextChange(selectedSlideIndex, textIndex, e.target.value)}
+                    placeholder="Enter text"
+                    style={{
+                      width: '100%',
+                      height: '100%',
+                      border: 'none',
+                      resize: 'none',
+                      padding: '0.375rem 0.75rem',
+                    }}
+                  />
+                </Rnd>
+              ))}
+              <div className="position-absolute bottom-0 end-0 m-3">
+                <Button 
+                  variant="outline-primary" 
+                  size="sm" 
+                  onClick={() => handleAddTextBlock(selectedSlideIndex)}
+                >
+                  Add Text Block
+                </Button>
+              </div>
+            </div>
+          </Card>
+        </Col>
+
+        {/* Right Column - Participants */}
+        <Col md={2}>
+        <Row className="d-flex justify-content-center">
+          <Col sm='auto'>
+            <Button
+              variant="info"
+              size="sm"
+              className="mb-3"
+              onClick={() => {
+                const encryptedText = encryptedUrl(presentationId);
+                navigate(`/presentation/view/${encryptedText}`);
+              }}
+            >
+              Present
+            </Button>
+          </Col>
+          <Form.Group className="mb-3 text-center">
+            <Form.Label>Presentation Title</Form.Label>
+            <Form.Control 
+              type="text" 
+              value={title} 
+              onChange={changeTitle} 
+              disabled={userData.role === 'Viewer'}
+            />
+            <p className="mt-3 mb-0">Participants: {participants.length}</p>
+          </Form.Group>
+          <Col sm='auto'>
+          <ListGroup>
+            {participants?.map((user) => (
+              <ListGroup.Item 
+              key={user.id}
+              className={`bg-${theme} ${getTextColorClass()}`}>
+                {user.username}
+              </ListGroup.Item>
+            ))}
+          </ListGroup>
+          </Col>
+        </Row>
+        </Col>
+      </Row>
     </Container>
   );
 };

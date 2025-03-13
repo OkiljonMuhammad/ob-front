@@ -68,11 +68,24 @@ export const AuthProvider = ({ children }) => {
 
   return (
     <AuthContext.Provider
-      value={{ isAuthenticated, login, logout, validateToken, isAdmin, userId }}
+    value={{ isAuthenticated, login, logout, validateToken, isAdmin, userId }}
     >
       {children}
     </AuthContext.Provider>
   );
+};
+
+export const username = () => {
+  const token = localStorage.getItem('token');
+  if (!token) return false;
+
+  try {
+    const decoded = jwtDecode(token);
+    return decoded.username;
+  } catch (error) {
+    console.error('Invalid token:', error);
+    return null;
+  }
 };
 
 export default AuthContext;

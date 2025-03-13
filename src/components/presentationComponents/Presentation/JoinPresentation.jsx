@@ -3,11 +3,19 @@ import axios from 'axios';
 import { toast } from 'react-toastify';
 import { Modal, Button } from 'react-bootstrap';
 import ThemeContext from '../../../context/ThemeContext';
-
+import { encryptData } from '../../../utils/authUtils';
+import { useNavigate } from 'react-router-dom';
 const DeletePresentation = ({ presentationId, showModal, onClose }) => {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [isJoining, setIsJoining] = useState(false);
   const { theme } = useContext(ThemeContext); 
+  const navigate = useNavigate();
+  
+  const encryptedUrl = (presentationId) => {
+    const encryptedText = encryptData(`${presentationId}`);
+    return encodeURIComponent(encryptedText);
+  };
+
   const handleJoin = async () => {
     setIsJoining(true);
     try {
@@ -16,7 +24,8 @@ const DeletePresentation = ({ presentationId, showModal, onClose }) => {
         {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` },
       });
-      toast.success('You successfully joined.');
+      const encryptedText = encryptedUrl(presentationId);
+      navigate(`/presentation/update/${encryptedText}`);
       onClose();
     } catch (error) {
       console.error('Error joining presentation', error);

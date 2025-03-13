@@ -1,4 +1,4 @@
-import React, { useState, useContext } from "react";
+import React, { useState, useContext, useEffect } from "react";
 import axios from "axios";
 import { Container, Form, Button, Row, Col, Card } from "react-bootstrap";
 import { toast } from 'react-toastify';
@@ -6,17 +6,40 @@ import { useNavigate } from 'react-router-dom';
 import { Rnd } from 'react-rnd';
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import ThemeContext from "../../../context/ThemeContext";
+
 const CreatePresentation = () => {
-  const [title, setTitle] = useState("");
+  const [title, setTitle] = useState('');
   const [slides, setSlides] = useState([]);
+  const [selectedSlideIndex, setSelectedSlideIndex] = useState(0);
   const navigate = useNavigate();
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const { theme } = useContext(ThemeContext);
+
+
   const handleAddSlide = () => {
     setSlides([...slides, { textBlocks: [] }]);
   };
 
+  useEffect(() => {
+    handleAddSlide();
+  }, []);
+
+  useEffect(() => {
+    if (slides.length > 0 && selectedSlideIndex >= slides.length) {
+      setSelectedSlideIndex(slides.length - 1);
+    }
+  }, [slides.length]);
+  
+  const changeTitle = (event) => {
+    const newTitle = event.target.value;
+    setTitle(event.target.value);
+    return newTitle;
+  };
+
   const handleRemoveSlide = (slideIndex) => {
+    if (slides.length == 1) {
+      return;
+    }
     setSlides((prevSlides) => prevSlides.filter((_, index) => index !== slideIndex));
   };
 
@@ -103,6 +126,10 @@ const CreatePresentation = () => {
   };
 
   const handleCreatePresentation = async () => {
+    if (!title.trim()) {
+      toast.error("Please, create title!");
+      return;
+    }
     try {
       await axios.post(
         `${BASE_URL}/api/presentation/create`,
@@ -123,139 +150,188 @@ const CreatePresentation = () => {
 
   const getTextColorClass = () => (theme === 'light' ? 'text-dark' : 'text-white');
 
-  return (
-    <Container className="mt-4 min-vh-100">
-      <Card className={`p-4 shadow bg-${theme} ${getTextColorClass()}`}>
-        <h2 className="text-center mb-4">Create New Presentation</h2>
-        <Form>
-          <Form.Group className="mb-3">
-            <Form.Label>Presentation Title</Form.Label>
-            <Form.Control
-              type="text"
-              value={title}
-              onChange={(e) => setTitle(e.target.value)}
-              placeholder="Enter presentation title"
-            />
-          </Form.Group>
-          <DragDropContext onDragEnd={onDragEnd}>
-            <Droppable droppableId="slides">
-              {(provided) => (
-                <div {...provided.droppableProps} ref={provided.innerRef}>
-                  {slides.map((slide, slideIndex) => (
-                    <Draggable key={String(slideIndex)} draggableId={String(slideIndex)} index={slideIndex}>
-                      {(provided) => (
-                        <Card 
-                        ref={provided.innerRef} {...provided.draggableProps} {...provided.dragHandleProps} 
-                        className="mb-3 p-3" style={{minHeight: '400px',  ...provided.draggableProps.style,}}>
-                          <div className="d-flex justify-content-between align-items-center">
-                            <h5>Slide {slideIndex + 1}</h5>
-                            <Button 
-                            variant="danger" 
-                            size="sm" 
-                            onClick={() => handleRemoveSlide(slideIndex)}
-                            style={{ position: "absolute",
-                              top: "5px",
-                              right: "5px",
-                              border: "none",
-                              background: "transparent",
-                              color: "red",
-                              fontSize: "1rem",
-                              cursor: "pointer",}}
-                            >✖</Button>
-                          </div>
-
-                          {slide.textBlocks.map((block, textIndex) => (
-                            <Rnd
-                              key={textIndex}
-                              position={{ x: block.x, y: block.y }}
-                              size={{ width: block.width, height: block.height }}
-                              onDragStop={(e, d) => handleTextBlockDrag(slideIndex, textIndex, d.x, d.y)}
-                              onResizeStop={(e, direction, ref, delta, position) =>
-                                handleTextBlockResize(
-                                  slideIndex,
-                                  textIndex,
-                                  ref.style.width,
-                                  ref.style.height,
-                                  position.x,
-                                  position.y
-                                )
-                              }
-                              bounds="parent"
-                              enableResizing={{
-                                bottom: true,
-                                bottomLeft: true,
-                                bottomRight: true,
-                                left: true,
-                                right: true,
-                                top: true,
-                                topLeft: true,
-                                topRight: true,
-                              }}
-                              style={{ border: "1px solid #ced4da", borderRadius: "0.25rem" }}
-                            >
-                              <Col xs="auto">
-                                <Button 
-                                variant="danger" 
-                                size="sm" 
-                                onClick={() => handleRemoveTextBlock(slideIndex, textIndex)}
-                                style={{
-                                  position: "absolute",
-                                  top: "-30px",
-                                  right: "-30px",
-                                  border: "none",
-                                  background: "transparent",
-                                  color: "red",
-                                  fontSize: "1rem",
-                                  cursor: "pointer",
-                                }}>
-                                  ✖
-                                  </Button>
-                              </Col>
-                              <Form.Control
-                                as="textarea"
-                                value={block.content}
-                                onChange={(e) => handleTextChange(slideIndex, textIndex, e.target.value)}
-                                placeholder="Enter text block content"
-                                style={{
-                                  width: "100%",
-                                  height: "100%",
-                                  border: "none",
-                                  resize: "none",
-                                  padding: "0.375rem 0.75rem",
+    return (
+      <Container fluid className="mt-4 min-vh-100">
+        <Row className="g-4">
+          {/* Left Column - Slide Thumbnails */}
+          <Col md={2} className="border-end">
+            <div className="d-flex justify-content-between align-items-center mb-3">
+              <h5>Slides</h5>
+              <Button variant="primary" size="sm" onClick={handleAddSlide}>
+              <i className="bi bi-plus-lg"></i>
+              </Button>
+            </div>
+            <DragDropContext onDragEnd={onDragEnd}>
+              <Droppable droppableId="slides">
+                {(provided) => (
+                  <div 
+                    {...provided.droppableProps} 
+                    ref={provided.innerRef}
+                    style={{ overflowY: 'auto', maxHeight: '90vh' }}
+                  >
+                    {slides?.map((slide, slideIndex) => (
+                      <Draggable key={String(slideIndex)} draggableId={String(slideIndex)} index={slideIndex}>
+                        {(provided) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            className={`slide-container mb-2 p-2 border ${selectedSlideIndex === slideIndex ? 'border-primary' : ''}`}
+                            style={{
+                              ...provided.draggableProps.style,
+                              transform: provided.draggableProps.style?.transform,
+                              cursor: 'pointer',
+                              aspectRatio: '3',
+                              background: 'white'
+                            }}
+                            onClick={() => setSelectedSlideIndex(slideIndex)}
+                          >
+                            <div style={{ transform: 'scale(0.22)', transformOrigin: '0 0', width: '320%', height: '320%', position: 'relative' }}>
+                              {slide.textBlocks?.map((block, textIndex) => (
+                                <div
+                                  key={textIndex}
+                                  style={{
+                                    position: 'absolute',
+                                    left: block.x,
+                                    top: block.y,
+                                    width: block.width,
+                                    height: block.height,
+                                    border: '1px solid #ddd',
+                                    fontSize: '12px',
+                                    whiteSpace: 'normal',
+                                    wordWrap: 'break-word',
+                                    overflow: 'hidden',
+                                  }}
+                                className={`${theme === 'dark' ? 'text-dark' : 'text-dark'}`}
+                                >
+                                  {block.content}
+                                </div>
+                              ))}
+                            </div>
+                              <Button
+                                variant="danger"
+                                size="sm"
+                                className="delete-slide-button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleRemoveSlide(slideIndex);
                                 }}
-                              />
-                            </Rnd>
-                          ))}
-                          <Col className="ms-auto">
-                            <Button variant="outline-primary" size="sm" onClick={() => handleAddTextBlock(slideIndex)}>
-                              Add Text Block
-                            </Button>
-                          </Col>
-                        </Card>
-                      )}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
+                              >
+                              <i className="bi bi-x-lg"></i>
+                              </Button>
+                            <div className={`${theme === 'dark' ? 'text-dark' : 'text-dark'} position-absolute top-0 start-0 m-1`}>
+                              {slideIndex + 1}
+                            </div>
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            </DragDropContext>
+          </Col>
+  
+          {/* Middle Column - Editable Slide */}
+          <Col md={8} className="border-end">
+            <Card className="p-3 shadow position-relative" style={{ aspectRatio: '16/9', background: 'white' }}>
+              <div className="h-100 block-container">
+                {slides[selectedSlideIndex]?.textBlocks?.map((block, textIndex) => (
+                  <Rnd
+                    key={textIndex}
+                    position={{ x: block.x, y: block.y }}
+                    size={{ width: block.width, height: block.height }}
+                    onDragStop={(e, d) => handleTextBlockDrag(selectedSlideIndex, textIndex, d.x, d.y)}
+                    onResizeStop={(e, direction, ref, delta, position) =>
+                      handleTextBlockResize(
+                        selectedSlideIndex,
+                        textIndex,
+                        ref.style.width,
+                        ref.style.height,
+                        position.x,
+                        position.y
+                      )
+                    }
+                    bounds="parent"
+                    enableResizing={{
+                      bottom: true,
+                      bottomLeft: true,
+                      bottomRight: true,
+                      left: true,
+                      right: true,
+                      top: true,
+                      topLeft: true,
+                      topRight: true,
+                    }}
+                    style={{ border: "1px solid #ced4da", borderRadius: "0.25rem", position: 'absolute' }}
+                  >
+                      <Button 
+                        variant="danger" 
+                        size="sm" 
+                        className="delete-block-button"
+                        onClick={() => handleRemoveTextBlock(selectedSlideIndex, textIndex)}
+                      >
+                      <i className="bi bi-x-lg"></i>
+                      </Button>
+                    <Form.Control
+                      as="textarea"
+                      value={block.content}
+                      onChange={(e) => handleTextChange(selectedSlideIndex, textIndex, e.target.value)}
+                      placeholder="Enter text"
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        border: 'none',
+                        resize: 'none',
+                        padding: '0.375rem 0.75rem',
+                      }}
+                    />
+                  </Rnd>
+                ))}
+                <div className="position-absolute bottom-0 end-0 m-3">
+                  <Button 
+                    variant="outline-primary" 
+                    size="sm" 
+                    onClick={() => handleAddTextBlock(selectedSlideIndex)}
+                  >
+                    Add Text Block
+                  </Button>
                 </div>
-              )}
-            </Droppable>
-          </DragDropContext>
-          <Row className="mt-3">
-            <Col>
-              <Button variant="secondary" onClick={handleAddSlide}>
-                Add Slide
-              </Button>
-            </Col>
-            <Col className="text-end">
-              <Button variant="primary" onClick={handleCreatePresentation}>
-                Create Presentation
-              </Button>
+              </div>
+            </Card>
+          </Col>
+  
+          {/* Right Column - Participants */}
+          <Col md={2}>
+          <Row className="d-flex justify-content-center">
+          <Col sm='auto'>
+          <Button
+              variant="success"
+              size="sm"
+              onClick={handleCreatePresentation}
+              className="mb-3"
+            >
+              Create Presentation
+            </Button>
             </Col>
           </Row>
-        </Form>
-      </Card>
-    </Container>
-  );
-};
+          <Row>
+            <Form.Group className="mb-3 text-center">
+              <Form.Label>Presentation Title</Form.Label>
+              <Form.Control 
+                type="text" 
+                value={title}
+                placeholder="Enter presentation title" 
+                onChange={changeTitle} 
+                required
+              />
+            </Form.Group>
+          </Row>
+          </Col>
+        </Row>
+      </Container>
+    );
+  };
 
 export default CreatePresentation;

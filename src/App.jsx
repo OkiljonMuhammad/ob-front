@@ -33,6 +33,7 @@ import CreatePresentation from './components/presentationComponents/Presentation
 import ViewPresentation from './components/presentationComponents/Presentation/ViewPresentation';
 import UpdatePresentation from './components/presentationComponents/Presentation/updatePresentation';
 import Participants from './components/presentationComponents/Participant/Participants';
+import LargeLayout from './components/Layout/LargeLayout';
 
 function App() {
   return (
@@ -222,21 +223,21 @@ function App() {
                     <Route
                       path="/presentation/create"
                       element={
-                        <Layout>
+                        <LargeLayout>
                           <ProtectedRoute>
                             <CreatePresentation />
                           </ProtectedRoute>
-                        </Layout>
+                        </LargeLayout>
                       }
                     />
                     <Route
-                      path="/presentation/update/:presentationId"
+                      path="/presentation/update/:encryptedData"
                       element={
-                        <Layout>
+                        <LargeLayout>
                           <ProtectedRoute>
                             <UpdatePresentation />
                           </ProtectedRoute>
-                        </Layout>
+                        </LargeLayout>
                       }
                     />
                     <Route

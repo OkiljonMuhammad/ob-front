@@ -30,7 +30,7 @@ export default function Presentations() {
   const encryptedUrl = (presentationId) => {
       const encryptedText = encryptData(`${presentationId}`);
       return encodeURIComponent(encryptedText);
-    };
+  };
 
   const handlePresentationDeleted = (deletedPresentationId) => {
     setPresentations((prevPresentations) =>
@@ -177,7 +177,10 @@ export default function Presentations() {
                       variant="warning"
                       size="sm"
                       className="me-2"
-                      onClick={() => navigate(`/presentation/update/${presentation.id}`)}
+                      onClick={() => {
+                      const encryptedText = encryptedUrl(presentation.id);
+                      navigate(`/presentation/update/${encryptedText}`);
+                      }}
                     >
                       Update
                     </Button>

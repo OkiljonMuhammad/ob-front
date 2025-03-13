@@ -3,6 +3,7 @@ import { Button, Container, Row, Col } from "react-bootstrap";
 import { decryptData } from "../../../utils/authUtils";
 import { useParams } from "react-router-dom";
 import axios from "axios";
+import Markdown from "react-markdown";
 
 const ViewPresentation = () => {
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -34,7 +35,6 @@ const ViewPresentation = () => {
       });
 
       const fetchedPresentationData = response.data.presentation;
-      console.log("Fetched Presentation:", fetchedPresentationData);
 
       setPresentationData({
         title: fetchedPresentationData.title || "",
@@ -64,7 +64,6 @@ const ViewPresentation = () => {
   }, [fetchPresentations]);
 
   useEffect(() => {
-    console.log("Updated Presentation Data:", presentationData);
   }, [presentationData]);
 
   useEffect(() => {
@@ -95,20 +94,21 @@ const ViewPresentation = () => {
         transition: "all 0.3s ease-in-out",
         border: "1px solid #ddd",
         padding: "20px",
+        
       }}
     > 
-    <>
-      <Row className="align-items-center justify-content-between">
+      <div className="presentation-container">
+      <Row className="align-items-center justify-content-between header">
         <Col xs='auto'>
-          <h2 className="text-center">{presentationData?.title || "Presentation"}</h2>
+          <h3 className="text-center">{presentationData?.title || "Presentation"}</h3>
         </Col>
         <Col xs='auto' className="ms-auto">
-          <Button onClick={() => setIsFullscreen((prev) => !prev)} className="mt-0 mb-3">
+          <Button size='sm' onClick={() => setIsFullscreen((prev) => !prev)} className="mt-0 mb-3">
             {isFullscreen ? "Exit Fullscreen" : "Enter Fullscreen"}
           </Button>
         </Col>
       </Row>
-      </>
+    </div>
       {loading ? (
         <h5>Loading...</h5>
       ) : (
@@ -124,22 +124,27 @@ const ViewPresentation = () => {
               backgroundColor: "#f8f9fa",
             }}
           >
-            <h5>Slide {index + 1}</h5>
+            <h5 className="view-slide-order">Slide {index + 1}</h5>
             {slide.textBlocks.map((block, textIndex) => (
               <div
                 key={textIndex}
                 style={{
                   position: "absolute",
-                  left: `${block.x}px`,
-                  top: `${block.y}px`,
-                  width: `${block.width}px`,
-                  height: `${block.height}px`,
+                  left: isFullscreen? `${block.x + 200}px` : `${block.x + 100}px`,
+                  top: isFullscreen?  `${block.y + 80}px` : `${block.y + 100}px`,
+                  width: isFullscreen? `${block.width + 200}px` : `${block.width + 100}px`,
+                  height: isFullscreen? `${block.height + 20}px` : `${block.height + 10}px`,
                   border: "1px solid #aaa",
                   padding: "5px",
                   backgroundColor: "white",
+                  whiteSpace: 'normal',
+                  wordWrap: 'break-word',
+                  overflow: 'hidden',
                 }}
               >
+                <Markdown>
                 {block.content}
+                </Markdown>
               </div>
             ))}
           </div>

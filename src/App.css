@@ -179,3 +179,79 @@
     transform: translateY(0);
   }
 }
+
+.slide-container, .block-container {
+  position: relative;
+}
+
+.delete-slide-button {
+  position: absolute;
+  top: 0px;
+  right: 0px;
+  border: none;
+  background: transparent;
+  color: blue;
+  font-size: 1rem;
+  cursor: pointer;
+  opacity: 0; 
+  transition: opacity 0.3s ease-in-out;
+}
+
+.delete-block-button {
+  position: absolute;
+  top: -30px;
+  right: -30px;
+  border: none;
+  background: transparent;
+  color: blue;
+  font-size: 1rem;
+  cursor: pointer;
+  opacity: 0; 
+  transition: opacity 0.3s ease-in-out;
+}
+
+.slide-order, .view-slide-order, .header, .add-block-button {
+  opacity: 0;
+  transition: opacity 0.3s ease-in-out;
+}
+
+.presentation-container:hover .header,
+.slide-container:hover .delete-slide-button,
+.slide-container:hover .slide-order,
+.block-container:hover .delete-block-button,
+.view-slide-order:hover,
+.add-block-button:hover {
+  opacity: 1;
+}
+
+
+.editor-container {
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  padding: 10px;
+  background: #fff;
+}
+
+.editor-toolbar {
+  display: flex;
+  gap: 5px;
+  margin-bottom: 10px;
+}
+
+.editor-toolbar button {
+  border: none;
+  background: #f1f1f1;
+  padding: 5px 10px;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: 0.2s;
+}
+
+.editor-toolbar button.active {
+  background: #007bff;
+  color: white;
+}
+
+.editor-toolbar button:hover {
+  background: #ddd;
+}
