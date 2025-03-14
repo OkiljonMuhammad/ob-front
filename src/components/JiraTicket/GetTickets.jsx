@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
-import { Table, Button, Row, Col, Pagination } from 'react-bootstrap';
+import { Container, Table, Button, Row, Col, Pagination } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import ThemeContext from '../../context/ThemeContext';
@@ -54,7 +54,7 @@ export default function GetTickets() {
   };
 
   return (
-    <>
+    <Container className='min-vh-100'>
       <Row className="mb-3">
         <Col>
           <Button variant="primary" onClick={() => navigate('/ticket/create')}>
@@ -134,6 +134,6 @@ export default function GetTickets() {
           </div>
         </>
       )}
-    </>
+    </Container>
   );
 }

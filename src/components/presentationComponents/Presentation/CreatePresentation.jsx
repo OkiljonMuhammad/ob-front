@@ -179,7 +179,7 @@ const CreatePresentation = () => {
   const getTextColorClass = () => (theme === 'light' ? 'text-dark' : 'text-white');
   
     return (
-      <Container fluid className="mt-4 min-vh-100">
+      <Container fluid className="mt-4">
         <Row className="g-4">
           {/* Left Column - Slide Thumbnails */}
            <Col md={2} className="border-end">

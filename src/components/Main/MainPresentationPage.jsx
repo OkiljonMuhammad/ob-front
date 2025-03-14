@@ -6,7 +6,7 @@ export default function MainPresentationPage() {
   const { t } = useTranslation();
 
   return (
-    <Container fluid className="py-4  text-center">
+    <Container fluid className="py-4  text-center min-vh-100">
       <h1 className="mb-5">{t('presentations')}</h1>
     
       <section className="mb-5 mt-5">

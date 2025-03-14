@@ -14,7 +14,6 @@ const LargeLayout = ({ children }) => {
       <Container fluid className={`w-100 mt-4 bg-${theme} text-${theme === 'light' ? 'dark' : 'white'}`}>
         {children}
       </Container>
-      <Help />
     </>
   );
 };

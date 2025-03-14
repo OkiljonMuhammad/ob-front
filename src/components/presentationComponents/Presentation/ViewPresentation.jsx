@@ -109,7 +109,7 @@ const ViewPresentation = () => {
       </Row>
     </div>
       {loading ? (
-        <h5>Loading...</h5>
+        <h5 className="text-center">Loading...</h5>
       ) : (
         presentationData?.slides?.map((slide, index) => (
           <div

@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback, useContext } from 'react';
-import { Table, Button, Row, Col, Pagination, Form, InputGroup } from 'react-bootstrap';
+import { Container, Table, Button, Row, Col, Pagination, Form, InputGroup } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { debounce } from 'lodash';
@@ -113,7 +113,7 @@ export default function Forms() {
   const getTextColorClass = () => (theme === 'light' ? 'text-dark' : 'text-white');
 
   return (
-    <>
+    <Container className='min-vh-100'>
       <Row className="mb-3">
         <Col>
           <Button variant="primary" onClick={() => navigate('/templates/create')}>
@@ -281,6 +281,6 @@ export default function Forms() {
           onClose={handleCloseModal} 
         />
       )}
-    </>
+    </Container>
   );
 }

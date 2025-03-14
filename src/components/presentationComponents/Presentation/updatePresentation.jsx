@@ -305,7 +305,11 @@ const UpdatePresentation = () => {
   };
 
   if (loading) {
-    return <Spinner animation="border" className="d-block mx-auto mt-5" />;
+    return (
+      <Container className="d-flex align-items-center">
+        <Spinner animation="border" className="d-block mx-auto" />
+      </Container>
+    )
   }
 
   const getTextColorClass = () => (theme === 'light' ? 'text-dark' : 'text-white');
