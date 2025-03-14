@@ -16,7 +16,6 @@ const ViewPresentation = () => {
   const { encryptedData } = useParams();
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
 
-
   let presentationId;
   try {
     presentationId = decryptData(encryptedData);
@@ -130,10 +129,10 @@ const ViewPresentation = () => {
                 key={textIndex}
                 style={{
                   position: "absolute",
-                  left: isFullscreen? `${block.x + 200}px` : `${block.x + 100}px`,
-                  top: isFullscreen?  `${block.y + 80}px` : `${block.y + 100}px`,
-                  width: isFullscreen? `${block.width + 200}px` : `${block.width + 100}px`,
-                  height: isFullscreen? `${block.height + 20}px` : `${block.height + 10}px`,
+                  left: `${block.x}%`,
+                  top: `${block.y}%`,
+                  width: `${block.width * 1.042}%`,
+                  height: `${block.height * 1.063}%`,
                   border: "1px solid #aaa",
                   padding: "5px",
                   backgroundColor: "white",

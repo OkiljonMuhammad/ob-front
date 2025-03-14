@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { Rnd } from 'react-rnd';
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import ThemeContext from "../../../context/ThemeContext";
+import  useMeasure  from 'react-use-measure';
 
 const CreatePresentation = () => {
   const [title, setTitle] = useState('');
@@ -14,7 +15,8 @@ const CreatePresentation = () => {
   const navigate = useNavigate();
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const { theme } = useContext(ThemeContext);
-
+  const [slideContainerRef, slideContainerBounds] = useMeasure();
+  const [slideViewRef, slideViewBounds] = useMeasure();
 
   const handleAddSlide = () => {
     setSlides([...slides, { textBlocks: [] }]);
@@ -44,14 +46,21 @@ const CreatePresentation = () => {
   };
 
   const handleAddTextBlock = (slideIndex) => {
+  const containerWidth = slideContainerBounds.width || 1200;
+  const containerHeight = slideContainerBounds.height || 675;
+
+  const initialX = (50 / containerWidth) * 100;
+  const initialY = (50 / containerHeight) * 100;
+  const initialWidth = (300 / containerWidth) * 100;
+  const initialHeight = (100 / containerHeight) * 100;
     setSlides((prevSlides) => {
       const newSlides = [...prevSlides];
       newSlides[slideIndex].textBlocks.push({
         content: "",
-        x: 50,
-        y: 50,
-        width: 300,
-        height: 100,
+        x: initialX,
+        y: initialY,
+        width: initialWidth,
+        height: initialHeight,
       });
       return newSlides;
     });
@@ -85,13 +94,19 @@ const CreatePresentation = () => {
   };
 
   const handleTextBlockDrag = (slideIndex, textIndex, newX, newY) => {
+    const containerWidth = slideContainerBounds.width || 1;
+    const containerHeight = slideContainerBounds.height || 1;
+
+    const xPercent = (newX / containerWidth) * 100;
+    const yPercent = (newY / containerHeight) * 100;
+
     setSlides((prevSlides) =>
       prevSlides.map((slide, i) =>
         i === slideIndex
           ? {
               ...slide,
               textBlocks: slide.textBlocks.map((block, j) =>
-                j === textIndex ? { ...block, x: newX, y: newY } : block
+                j === textIndex ? { ...block, x: xPercent, y: yPercent } : block
               ),
             }
           : slide
@@ -103,13 +118,26 @@ const CreatePresentation = () => {
     const newWidth = parseInt(newWidthStr, 10);
     const newHeight = parseInt(newHeightStr, 10);
 
+    const containerWidth = slideContainerBounds.width || 1;
+    const containerHeight = slideContainerBounds.height || 1;
+
+    const widthPercent = (newWidth / containerWidth) * 100;
+    const heightPercent = (newHeight / containerHeight) * 100;
+    const xPercent = (newX / containerWidth) * 100;
+    const yPercent = (newY / containerHeight) * 100;
+
     setSlides((prevSlides) =>
       prevSlides.map((slide, i) =>
         i === slideIndex
           ? {
               ...slide,
               textBlocks: slide.textBlocks.map((block, j) =>
-                j === textIndex ? { ...block, width: newWidth, height: newHeight, x: newX, y: newY } : block
+                j === textIndex ? { 
+                  ...block,   
+                  width: widthPercent, 
+                  height: heightPercent, 
+                  x: xPercent, 
+                  y: yPercent  } : block
               ),
             }
           : slide
@@ -149,99 +177,104 @@ const CreatePresentation = () => {
   };
 
   const getTextColorClass = () => (theme === 'light' ? 'text-dark' : 'text-white');
-
+  
     return (
       <Container fluid className="mt-4 min-vh-100">
         <Row className="g-4">
           {/* Left Column - Slide Thumbnails */}
-          <Col md={2} className="border-end">
-            <div className="d-flex justify-content-between align-items-center mb-3">
-              <h5>Slides</h5>
-              <Button variant="primary" size="sm" onClick={handleAddSlide}>
-              <i className="bi bi-plus-lg"></i>
-              </Button>
-            </div>
-            <DragDropContext onDragEnd={onDragEnd}>
-              <Droppable droppableId="slides">
-                {(provided) => (
-                  <div 
-                    {...provided.droppableProps} 
-                    ref={provided.innerRef}
-                    style={{ overflowY: 'auto', maxHeight: '90vh' }}
-                  >
-                    {slides?.map((slide, slideIndex) => (
-                      <Draggable key={String(slideIndex)} draggableId={String(slideIndex)} index={slideIndex}>
-                        {(provided) => (
-                          <div
-                            ref={provided.innerRef}
-                            {...provided.draggableProps}
-                            {...provided.dragHandleProps}
-                            className={`slide-container mb-2 p-2 border ${selectedSlideIndex === slideIndex ? 'border-primary' : ''}`}
-                            style={{
-                              ...provided.draggableProps.style,
-                              transform: provided.draggableProps.style?.transform,
-                              cursor: 'pointer',
-                              aspectRatio: '3',
-                              background: 'white'
-                            }}
-                            onClick={() => setSelectedSlideIndex(slideIndex)}
-                          >
-                            <div style={{ transform: 'scale(0.22)', transformOrigin: '0 0', width: '320%', height: '320%', position: 'relative' }}>
-                              {slide.textBlocks?.map((block, textIndex) => (
-                                <div
-                                  key={textIndex}
-                                  style={{
-                                    position: 'absolute',
-                                    left: block.x,
-                                    top: block.y,
-                                    width: block.width,
-                                    height: block.height,
-                                    border: '1px solid #ddd',
-                                    fontSize: '12px',
-                                    whiteSpace: 'normal',
-                                    wordWrap: 'break-word',
-                                    overflow: 'hidden',
-                                  }}
-                                className={`${theme === 'dark' ? 'text-dark' : 'text-dark'}`}
-                                >
-                                  {block.content}
-                                </div>
-                              ))}
-                            </div>
-                              <Button
-                                variant="danger"
-                                size="sm"
-                                className="delete-slide-button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  handleRemoveSlide(slideIndex);
+           <Col md={2} className="border-end">
+          <div className="d-flex justify-content-between align-items-center mb-3">
+            <h5>Slides</h5>
+            <Button variant="primary" size="sm" onClick={handleAddSlide}>
+            <i className="bi bi-plus-lg"></i>
+            </Button>
+          </div>
+          <DragDropContext onDragEnd={onDragEnd}>
+            <Droppable droppableId="slides">
+              {(provided) => (
+                <div 
+                  {...provided.droppableProps} 
+                  ref={provided.innerRef}
+                  style={{ overflowY: 'auto', maxHeight: '90vh' }}
+                >
+                  {slides?.map((slide, slideIndex) => (
+                    <Draggable key={String(slideIndex)} draggableId={String(slideIndex)} index={slideIndex}>
+                      {(provided) => (
+                        <div
+                          ref={provided.innerRef}
+                          {...provided.draggableProps}
+                          {...provided.dragHandleProps}
+                          className={`slide-container mb-2 p-2 border ${selectedSlideIndex === slideIndex ? 'border-primary' : ''}`}
+                          style={{
+                            ...provided.draggableProps.style,
+                            transform: provided.draggableProps.style?.transform,
+                            cursor: 'pointer',
+                            aspectRatio: '16/9',
+                            background: 'white',
+                          }}
+                          onClick={() => setSelectedSlideIndex(slideIndex)}
+                        >
+                          <div style={{ transform: 'scale(1)', transformOrigin: '0 0', width: '100%', height: '100%', position: 'relative' }}>
+                            {slide.textBlocks?.map((block, textIndex) => (
+                              <div
+                                key={textIndex}
+                                style={{
+                                  position: 'absolute',
+                                  left: `${block.x}%`,
+                                  top: `${block.y}%`,
+                                  width: `${block.width}%`,
+                                  height: `${block.height}%`,
+                                  border: '1px solid #ddd',
+                                  fontSize: `${4}px`,
+                                  whiteSpace: 'normal',
+                                  wordWrap: 'break-word',
+                                  overflow: 'hidden',
                                 }}
+                              className={`${theme === 'dark' ? 'text-dark' : 'text-dark'}`}
                               >
-                              <i className="bi bi-x-lg"></i>
-                              </Button>
-                            <div className={`${theme === 'dark' ? 'text-dark' : 'text-dark'} position-absolute top-0 start-0 m-1`}>
-                              {slideIndex + 1}
-                            </div>
+                                {block.content}
+                              </div>
+                            ))}
                           </div>
-                        )}
-                      </Draggable>
-                    ))}
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            </DragDropContext>
-          </Col>
-  
+                            <Button
+                              variant="danger"
+                              size="sm"
+                              className="delete-slide-button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleRemoveSlide(slideIndex);
+                              }}
+                            >
+                            <i className="bi bi-x-lg"></i>
+                            </Button>
+                          <div className={`${theme === 'dark' ? 'text-dark' : 'text-dark'} position-absolute top-0 start-0 m-1`}>
+                            {slideIndex + 1}
+                          </div>
+                        </div>
+                      )}
+                    </Draggable>
+                  ))}
+                  {provided.placeholder}
+                </div>
+              )}
+            </Droppable>
+          </DragDropContext>
+        </Col>
           {/* Middle Column - Editable Slide */}
           <Col md={8} className="border-end">
-            <Card className="p-3 shadow position-relative" style={{ aspectRatio: '16/9', background: 'white' }}>
+            <Card ref={slideContainerRef} className="p-3 shadow position-relative" style={{ aspectRatio: '16/9', background: 'white' }}>
               <div className="h-100 block-container">
                 {slides[selectedSlideIndex]?.textBlocks?.map((block, textIndex) => (
                   <Rnd
                     key={textIndex}
-                    position={{ x: block.x, y: block.y }}
-                    size={{ width: block.width, height: block.height }}
+                    position={{  
+                      x: (block.x * slideContainerBounds.width) / 100, 
+                      y: (block.y * slideContainerBounds.height) / 100  
+                    }}
+                    size={{  
+                      width: (block.width * slideContainerBounds.width) / 100, 
+                      height: (block.height * slideContainerBounds.height) / 100  
+                    }}
                     onDragStop={(e, d) => handleTextBlockDrag(selectedSlideIndex, textIndex, d.x, d.y)}
                     onResizeStop={(e, direction, ref, delta, position) =>
                       handleTextBlockResize(

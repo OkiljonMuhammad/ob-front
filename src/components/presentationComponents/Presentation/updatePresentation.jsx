@@ -10,6 +10,7 @@ import { username } from "../../../context/AuthContext";
 import { decryptData } from "../../../utils/authUtils";
 import { encryptData } from '../../../utils/authUtils';
 import ThemeContext from '../../../context/ThemeContext';
+import  useMeasure  from 'react-use-measure';
 
 const UpdatePresentation = () => {
   const [title, setTitle] = useState("");
@@ -23,6 +24,8 @@ const UpdatePresentation = () => {
   const BASE_URL = import.meta.env.VITE_API_BASE_URL;
   const [userData, setUserData] = useState({})
   const [selectedSlideIndex, setSelectedSlideIndex] = useState(0);
+  const [slideContainerRef, slideContainerBounds] = useMeasure();
+  const [slideViewRef, slideViewBounds] = useMeasure();
 
   let presentationId;
   try {
@@ -156,14 +159,22 @@ const UpdatePresentation = () => {
     if (userData.role === 'Viewer') {
       return;
     };
+    const containerWidth = slideContainerBounds.width || 1200;
+    const containerHeight = slideContainerBounds.height || 675;
+    const initialX = (50 / containerWidth) * 100;
+    const initialY = (50 / containerHeight) * 100;
+    const initialWidth = (300 / containerWidth) * 100;
+    const initialHeight = (100 / containerHeight) * 100;
+
+
     setSlides((prevSlides) => {
       const newSlides = [...prevSlides];
       newSlides[slideIndex].TextBlocks.push({
         content: "",
-        x: 50,
-        y: 50,
-        width: 300,
-        height: 100,
+        x: initialX,
+        y: initialY,
+        width: initialWidth,
+        height: initialHeight,
       });
       socket.current.emit("slide_updated", newSlides);
       return newSlides;
@@ -210,13 +221,19 @@ const UpdatePresentation = () => {
     if (userData.role === 'Viewer') {
       return;
     };
+    const containerWidth = slideContainerBounds.width || 1;
+    const containerHeight = slideContainerBounds.height || 1;
+
+    const xPercent = (newX / containerWidth) * 100;
+    const yPercent = (newY / containerHeight) * 100;
+
     setSlides((prevSlides) => {
       const newSlides = prevSlides.map((slide, i) =>
         i === slideIndex
           ? {
               ...slide,
               TextBlocks: slide.TextBlocks.map((block, j) =>
-                j === textIndex ? { ...block, x: newX, y: newY } : block
+              j === textIndex ? { ...block, x: xPercent, y: yPercent } : block
               ),
             }
           : slide
@@ -234,13 +251,27 @@ const UpdatePresentation = () => {
     const newWidth = parseInt(newWidthStr, 10);
     const newHeight = parseInt(newHeightStr, 10);
 
+    const containerWidth = slideContainerBounds.width || 1;
+    const containerHeight = slideContainerBounds.height || 1;
+
+    const widthPercent = (newWidth / containerWidth) * 100;
+    const heightPercent = (newHeight / containerHeight) * 100;
+    const xPercent = (newX / containerWidth) * 100;
+    const yPercent = (newY / containerHeight) * 100;
+
+
     setSlides((prevSlides) => {
       const newSlides = prevSlides.map((slide, i) =>
         i === slideIndex
           ? {
               ...slide,
               TextBlocks: slide.TextBlocks.map((block, j) =>
-                j === textIndex ? { ...block, width: newWidth, height: newHeight, x: newX, y: newY } : block
+                j === textIndex ? { 
+                  ...block,  
+                  width: widthPercent, 
+                  height: heightPercent, 
+                  x: xPercent, 
+                  y: yPercent  } : block
               ),
             }
           : slide
@@ -310,29 +341,28 @@ const UpdatePresentation = () => {
                             ...provided.draggableProps.style,
                             transform: provided.draggableProps.style?.transform,
                             cursor: 'pointer',
-                            aspectRatio: '4/1',
-                            background: 'white'
+                            aspectRatio: '16/9',
+                            background: 'white',
                           }}
                           onClick={() => setSelectedSlideIndex(slideIndex)}
                         >
-                          <div style={{ transform: 'scale(0.22)', transformOrigin: '0 0', width: '320%', height: '320%' }}>
+                          <div style={{ transform: 'scale(1)', transformOrigin: '0 0', width: '100%', height: '100%', position: 'relative' }}>
                             {slide.TextBlocks?.map((block, textIndex) => (
                               <div
                                 key={textIndex}
                                 style={{
                                   position: 'absolute',
-                                  left: block.x,
-                                  top: block.y,
-                                  width: block.width,
-                                  height: block.height,
+                                  left: `${block.x}%`,
+                                  top: `${block.y}%`,
+                                  width: `${block.width}%`,
+                                  height: `${block.height}%`,
                                   border: '1px solid #ddd',
-                                  fontSize: '17px',
+                                  fontSize: `${4}px`,
                                   whiteSpace: 'normal',
                                   wordWrap: 'break-word',
                                   overflow: 'hidden',
-
                                 }}
-                                className={`${theme === 'dark' ? 'text-dark' : 'text-dark'}`}
+                              className={`${theme === 'dark' ? 'text-dark' : 'text-dark'}`}
                               >
                                 {block.content}
                               </div>
@@ -362,17 +392,21 @@ const UpdatePresentation = () => {
             </Droppable>
           </DragDropContext>
         </Col>
-
         {/* Middle Column - Editable Slide */}
         <Col md={8} className="border-end">
-          <Card className="p-3 shadow" style={{ aspectRatio: '16/9', background: 'white' }}>
-            <div className="h-100">
+          <Card ref={slideContainerRef} className="p-3 shadow" style={{ aspectRatio: '16/9', background: 'white' }}>
+            <div className="h-100 block-container">
               {slides[selectedSlideIndex]?.TextBlocks?.map((block, textIndex) => (
                 <Rnd
-                  className="block-container"
                   key={textIndex}
-                  position={{ x: block.x, y: block.y }}
-                  size={{ width: block.width, height: block.height }}
+                  position={{  
+                    x: (block.x * slideContainerBounds.width) / 100, 
+                    y: (block.y * slideContainerBounds.height) / 100  
+                  }}
+                  size={{  
+                    width: (block.width * slideContainerBounds.width) / 100, 
+                    height: (block.height * slideContainerBounds.height) / 100  
+                  }}
                   onDragStop={(e, d) => handleTextBlockDrag(selectedSlideIndex, textIndex, d.x, d.y)}
                   onResizeStop={(e, direction, ref, delta, position) =>
                     handleTextBlockResize(
